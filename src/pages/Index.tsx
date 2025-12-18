@@ -65,7 +65,6 @@ const Index = () => {
     <div className="flex flex-col h-full">
       <DashboardHeader 
         title="Accounting Dashboard" 
-        subtitle="CirclePe × Truliv Partnership"
       />
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -79,9 +78,9 @@ const Index = () => {
             trend={{ value: 12.5, isPositive: true }}
           />
           <StatCard
-            title="Total Collected"
+            title="Pending Disbursement"
             value={formatCurrency(stats.totalCollected)}
-            subtitle="Repayments received"
+            subtitle="Onboarding pending for disbursement"
             icon={TrendingUp}
             variant="success"
             trend={{ value: 8.2, isPositive: true }}
@@ -94,9 +93,9 @@ const Index = () => {
             variant={stats.totalOutstanding > 100000 ? "warning" : "default"}
           />
           <StatCard
-            title="Active Residents"
+            title="Total Residents"
             value={stats.totalResidents}
-            subtitle={`${stats.overdueCount} overdue • ${stats.advanceCount} advance`}
+            subtitle={`${stats.activeCount} active • ${stats.inactiveCount} inactive`}
             icon={Users}
           />
         </div>
