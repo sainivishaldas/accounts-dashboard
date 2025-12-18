@@ -2,13 +2,8 @@ import { useState } from "react";
 import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
-  Wallet,
   TrendingUp,
   Building2,
 } from "lucide-react";
@@ -17,16 +12,8 @@ import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Disbursements", href: "/disbursements", icon: Wallet },
-  { name: "Residents", href: "/residents", icon: Users },
   { name: "Properties", href: "/properties", icon: Building2 },
   { name: "Reports", href: "/reports", icon: TrendingUp },
-  { name: "Documents", href: "/documents", icon: FileText },
-];
-
-const bottomNavigation = [
-  { name: "Settings", href: "/settings", icon: Settings },
-  { name: "Help & Support", href: "/help", icon: HelpCircle },
 ];
 
 export function DashboardSidebar() {
@@ -85,28 +72,8 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      {/* Bottom Navigation */}
-      <div className="border-t border-sidebar-border p-3 space-y-1">
-        {bottomNavigation.map((item) => {
-          const isActive = location.pathname === item.href;
-          return (
-            <RouterNavLink
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-              )}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{item.name}</span>}
-            </RouterNavLink>
-          );
-        })}
-
-        {/* Collapse Toggle */}
+      {/* Collapse Toggle */}
+      <div className="border-t border-sidebar-border p-3">
         <Button
           variant="ghost"
           size="sm"

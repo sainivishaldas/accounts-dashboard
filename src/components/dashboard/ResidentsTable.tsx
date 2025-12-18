@@ -7,6 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ResidentDetailsPanel } from "./ResidentDetailsPanel";
 import type { Resident } from "@/data/mockData";
@@ -24,13 +31,17 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-type SortField = "name" | "monthlyRent" | "totalAdvanceDisbursed" | "leaseStartDate" | "repaymentStatus";
+type SortField = "name" | "monthlyRent" | "leaseStartDate" | "leaseEndDate" | "repaymentStatus";
 type SortDirection = "asc" | "desc";
+
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500];
 
 export function ResidentsTable({ residents }: ResidentsTableProps) {
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(500);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -50,11 +61,11 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
       case "monthlyRent":
         comparison = a.monthlyRent - b.monthlyRent;
         break;
-      case "totalAdvanceDisbursed":
-        comparison = a.totalAdvanceDisbursed - b.totalAdvanceDisbursed;
-        break;
       case "leaseStartDate":
         comparison = new Date(a.leaseStartDate).getTime() - new Date(b.leaseStartDate).getTime();
+        break;
+      case "leaseEndDate":
+        comparison = new Date(a.leaseEndDate).getTime() - new Date(b.leaseEndDate).getTime();
         break;
       case "repaymentStatus":
         comparison = a.repaymentStatus.localeCompare(b.repaymentStatus);
@@ -62,6 +73,15 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
     }
     return sortDirection === "asc" ? comparison : -comparison;
   });
+
+  const totalPages = Math.ceil(sortedResidents.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedResidents = sortedResidents.slice(startIndex, startIndex + pageSize);
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(Number(value));
+    setCurrentPage(1);
+  };
 
   const SortHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
@@ -87,13 +107,13 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                 <th>Property</th>
                 <th>City</th>
                 <th>
-                  <SortHeader field="leaseStartDate">Lease Period</SortHeader>
+                  <SortHeader field="leaseStartDate">Lease Start</SortHeader>
                 </th>
                 <th>
-                  <SortHeader field="monthlyRent">Monthly Rent</SortHeader>
+                  <SortHeader field="leaseEndDate">Lease End</SortHeader>
                 </th>
                 <th>
-                  <SortHeader field="totalAdvanceDisbursed">Disbursed</SortHeader>
+                  <SortHeader field="monthlyRent">Package Amount</SortHeader>
                 </th>
                 <th>Disbursement</th>
                 <th>
@@ -103,7 +123,7 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
               </tr>
             </thead>
             <tbody>
-              {sortedResidents.map((resident) => (
+              {paginatedResidents.map((resident) => (
                 <tr
                   key={resident.id}
                   onClick={() => setSelectedResident(resident)}
@@ -126,13 +146,12 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                   </td>
                   <td>{resident.city}</td>
                   <td>
-                    <div className="text-sm">
-                      <p>{format(new Date(resident.leaseStartDate), "MMM d, yyyy")}</p>
-                      <p className="text-xs text-muted-foreground">to {format(new Date(resident.leaseEndDate), "MMM d, yyyy")}</p>
-                    </div>
+                    <p className="text-sm">{format(new Date(resident.leaseStartDate), "MMM d, yyyy")}</p>
+                  </td>
+                  <td>
+                    <p className="text-sm">{format(new Date(resident.leaseEndDate), "MMM d, yyyy")}</p>
                   </td>
                   <td className="amount font-medium">{formatCurrency(resident.monthlyRent)}</td>
-                  <td className="amount font-medium">{formatCurrency(resident.totalAdvanceDisbursed)}</td>
                   <td>
                     <StatusBadge status={resident.disbursementStatus} />
                   </td>
@@ -163,14 +182,44 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
 
         {/* Table Footer */}
         <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/30">
-          <p className="text-sm text-muted-foreground">
-            Showing <span className="font-medium">{sortedResidents.length}</span> residents
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Showing <span className="font-medium">{startIndex + 1}-{Math.min(startIndex + pageSize, sortedResidents.length)}</span> of <span className="font-medium">{sortedResidents.length}</span> residents
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Per page:</span>
+              <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+                <SelectTrigger className="w-20 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm" disabled>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages || 1}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
               Next
             </Button>
           </div>

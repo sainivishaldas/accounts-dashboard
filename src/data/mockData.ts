@@ -308,6 +308,8 @@ export const getSummaryStats = () => {
   );
   const overdueCount = residents.filter(r => r.repaymentStatus === 'overdue').length;
   const advanceCount = residents.filter(r => r.repaymentStatus === 'advance_paid').length;
+  const activeCount = residents.filter(r => new Date(r.leaseEndDate) >= new Date()).length;
+  const inactiveCount = residents.length - activeCount;
   
   return {
     totalDisbursed,
@@ -317,6 +319,8 @@ export const getSummaryStats = () => {
     overdueCount,
     advanceCount,
     onTimeCount: residents.length - overdueCount - advanceCount,
+    activeCount,
+    inactiveCount,
   };
 };
 
