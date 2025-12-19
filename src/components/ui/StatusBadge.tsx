@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
 import type { PaymentStatus, DisbursementStatus, RepaymentStatus, CurrentStatus } from "@/data/mockData";
 
+export type PropertyStatus = 'active' | 'inactive';
+
 interface StatusBadgeProps {
-  status: PaymentStatus | DisbursementStatus | RepaymentStatus | CurrentStatus;
+  status: PaymentStatus | DisbursementStatus | RepaymentStatus | CurrentStatus | PropertyStatus;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ const statusConfig: Record<string, { label: string; className: string; icon: str
   
   // Current Status
   active: { label: "Active", className: "status-paid", icon: "🟢" },
+  inactive: { label: "Inactive", className: "status-pending", icon: "⚫" },
   move_out: { label: "Move-out", className: "status-pending", icon: "🔵" },
   early_move_out: { label: "Early Move-out", className: "status-overdue", icon: "🔴" },
   extended: { label: "Extended with Truliv", className: "status-advance", icon: "🟡" },

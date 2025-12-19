@@ -42,7 +42,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
               {resident.id} • {resident.propertyName}
             </p>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-lg shrink-0">
+          <div className="flex h-36 w-36 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-4xl shrink-0">
             {resident.name.split(' ').map(n => n[0]).join('')}
           </div>
         </div>
@@ -269,29 +269,6 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                 </div>
                 <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
                   <Download className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Statement of Account */}
-            <div className="mt-6 p-4 rounded-lg border border-border bg-muted/30">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold shrink-0">
-                    {resident.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">Statement of Account (SOA)</h4>
-                      <StatusBadge status={resident.repaymentStatus} />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Auto-generated ledger for {resident.name}</p>
-                    <p className="text-xs text-muted-foreground">{resident.id} • {resident.propertyName}</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Download SOA
                 </Button>
               </div>
             </div>
