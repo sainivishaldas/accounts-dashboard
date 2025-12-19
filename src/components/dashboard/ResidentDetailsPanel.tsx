@@ -32,14 +32,19 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
     <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-card shadow-elevated animate-slide-in-right overflow-hidden flex flex-col border-l border-border">
       {/* Header */}
       <div className="flex items-start justify-between border-b border-border px-6 py-5 bg-card">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold">{resident.name}</h2>
-            <StatusBadge status={resident.repaymentStatus} />
+        <div className="flex items-start gap-4">
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold">{resident.name}</h2>
+              <StatusBadge status={resident.repaymentStatus} />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {resident.id} • {resident.propertyName}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {resident.id} • {resident.propertyName}
-          </p>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-lg shrink-0">
+            {resident.name.split(' ').map(n => n[0]).join('')}
+          </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
           <X className="h-5 w-5" />
@@ -51,15 +56,15 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-4 p-6 border-b border-border bg-muted/30">
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Total Disbursed</p>
-            <p className="text-lg font-semibold amount">{formatCurrency(resident.totalAdvanceDisbursed)}</p>
+            <p className="text-xs text-muted-foreground">Package Amount</p>
+            <p className="text-lg font-semibold amount">{formatCurrency(resident.monthlyRent)}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Collected</p>
+            <p className="text-xs text-muted-foreground">Disbursed</p>
             <p className="text-lg font-semibold amount amount-positive">{formatCurrency(totalCollected)}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Outstanding</p>
+            <p className="text-xs text-muted-foreground">Disbursement Pending</p>
             <p className={`text-lg font-semibold amount ${outstanding > 0 ? "amount-negative" : "amount-positive"}`}>
               {formatCurrency(outstanding)}
             </p>
@@ -139,7 +144,6 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                     <th>Month</th>
                     <th>Due Date</th>
                     <th>Amount</th>
-                    <th>Mode</th>
                     <th>Status</th>
                     <th>Paid On</th>
                   </tr>
@@ -150,11 +154,6 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                       <td className="font-medium">{r.month}</td>
                       <td>{format(new Date(r.dueDate), "MMM d, yyyy")}</td>
                       <td className="amount">{formatCurrency(r.rentAmount)}</td>
-                      <td>
-                        <span className={`text-xs px-2 py-0.5 rounded ${r.paymentMode === "NACH" ? "bg-primary/10 text-primary" : "bg-muted"}`}>
-                          {r.paymentMode}
-                        </span>
-                      </td>
                       <td>
                         <StatusBadge status={r.status} />
                       </td>
@@ -258,63 +257,42 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
           <TabsContent value="documents" className="p-6 space-y-4 mt-0">
             <h3 className="font-medium">Documents & Agreements</h3>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                { name: "Rent Agreement", type: "PDF", size: "2.4 MB" },
-                { name: "KYC Documents", type: "PDF", size: "1.8 MB" },
-                { name: "Property Photos", type: "ZIP", size: "12.6 MB" },
-                { name: "NACH Mandate", type: "PDF", size: "456 KB" },
-              ].map((doc) => (
-                <div
-                  key={doc.name}
-                  className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{doc.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {doc.type} • {doc.size}
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Download className="h-4 w-4" />
-                  </Button>
+              <div
+                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
                 </div>
-              ))}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">Rent Agreement</p>
+                  <p className="text-xs text-muted-foreground">PDF • 2.4 MB</p>
+                </div>
+                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Statement of Account */}
             <div className="mt-6 p-4 rounded-lg border border-border bg-muted/30">
               <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h4 className="font-medium">Statement of Account (SOA)</h4>
-                  <p className="text-sm text-muted-foreground">Auto-generated ledger for {resident.name}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold shrink-0">
+                    {resident.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">Statement of Account (SOA)</h4>
+                      <StatusBadge status={resident.repaymentStatus} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Auto-generated ledger for {resident.name}</p>
+                    <p className="text-xs text-muted-foreground">{resident.id} • {resident.propertyName}</p>
+                  </div>
                 </div>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Download className="h-4 w-4" />
                   Download SOA
                 </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Opening Balance</span>
-                  <span className="amount">₹0</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Total Disbursed</span>
-                  <span className="amount">{formatCurrency(resident.totalAdvanceDisbursed)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Total Collected</span>
-                  <span className="amount amount-positive">{formatCurrency(totalCollected)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Outstanding Balance</span>
-                  <span className={`amount ${outstanding > 0 ? "amount-negative" : "amount-positive"}`}>
-                    {formatCurrency(outstanding)}
-                  </span>
-                </div>
               </div>
             </div>
           </TabsContent>

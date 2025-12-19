@@ -116,9 +116,7 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                   <SortHeader field="monthlyRent">Package Amount</SortHeader>
                 </th>
                 <th>Disbursement</th>
-                <th>
-                  <SortHeader field="repaymentStatus">Repayment</SortHeader>
-                </th>
+                <th>Current Status</th>
                 <th className="w-12"></th>
               </tr>
             </thead>
@@ -156,7 +154,7 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                     <StatusBadge status={resident.disbursementStatus} />
                   </td>
                   <td>
-                    <StatusBadge status={resident.repaymentStatus} />
+                    <StatusBadge status={resident.currentStatus} />
                   </td>
                   <td>
                     <DropdownMenu>
@@ -169,8 +167,6 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                         <DropdownMenuItem onClick={() => setSelectedResident(resident)}>
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Download SOA</DropdownMenuItem>
-                        <DropdownMenuItem>Export Data</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>

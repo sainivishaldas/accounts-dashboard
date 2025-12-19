@@ -86,11 +86,10 @@ const Index = () => {
             trend={{ value: 8.2, isPositive: true }}
           />
           <StatCard
-            title="Outstanding"
-            value={formatCurrency(stats.totalOutstanding)}
-            subtitle="Pending collection"
+            title="Active Residents"
+            value={stats.activeCount}
+            subtitle={`${stats.onTimeCount} Ontime • ${stats.overdueCount} Overdue`}
             icon={Clock}
-            variant={stats.totalOutstanding > 100000 ? "warning" : "default"}
           />
           <StatCard
             title="Total Residents"
