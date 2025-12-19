@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import type { PaymentStatus, DisbursementStatus, RepaymentStatus } from "@/data/mockData";
+import type { PaymentStatus, DisbursementStatus, RepaymentStatus, CurrentStatus } from "@/data/mockData";
 
 interface StatusBadgeProps {
-  status: PaymentStatus | DisbursementStatus | RepaymentStatus;
+  status: PaymentStatus | DisbursementStatus | RepaymentStatus | CurrentStatus;
   className?: string;
 }
 
@@ -21,6 +21,12 @@ const statusConfig: Record<string, { label: string; className: string; icon: str
   on_time: { label: "On Time", className: "status-paid", icon: "🟢" },
   overdue: { label: "Overdue", className: "status-overdue", icon: "🔴" },
   advance_paid: { label: "Advance Paid", className: "status-advance", icon: "🟡" },
+  
+  // Current Status
+  active: { label: "Active", className: "status-paid", icon: "🟢" },
+  move_out: { label: "Move-out", className: "status-pending", icon: "🔵" },
+  early_move_out: { label: "Early Move-out", className: "status-overdue", icon: "🔴" },
+  extended: { label: "Extended with Truliv", className: "status-advance", icon: "🟡" },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {

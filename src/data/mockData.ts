@@ -3,6 +3,7 @@
 export type PaymentStatus = 'paid' | 'pending' | 'failed' | 'advance';
 export type DisbursementStatus = 'fully_disbursed' | 'partial';
 export type RepaymentStatus = 'on_time' | 'overdue' | 'advance_paid';
+export type CurrentStatus = 'active' | 'move_out' | 'early_move_out' | 'extended';
 
 export interface Disbursement {
   id: string;
@@ -45,6 +46,7 @@ export interface Resident {
   totalAdvanceDisbursed: number;
   disbursementStatus: DisbursementStatus;
   repaymentStatus: RepaymentStatus;
+  currentStatus: CurrentStatus;
   disbursements: Disbursement[];
   repayments: Repayment[];
 }
@@ -71,6 +73,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 300000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'on_time',
+    currentStatus: 'active',
     disbursements: [
       { id: 'D001', date: '2024-01-10', amount: 150000, utrNumber: 'UTR2024011012345', type: '1st Tranche' },
       { id: 'D002', date: '2024-01-12', amount: 150000, utrNumber: 'UTR2024011254321', type: '2nd Tranche' },
@@ -103,6 +106,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 264000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'overdue',
+    currentStatus: 'move_out',
     disbursements: [
       { id: 'D003', date: '2024-01-28', amount: 264000, utrNumber: 'UTR2024012898765', type: '1st Tranche' },
     ],
@@ -133,6 +137,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 420000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'advance_paid',
+    currentStatus: 'extended',
     disbursements: [
       { id: 'D004', date: '2024-02-25', amount: 210000, utrNumber: 'UTR2024022543210', type: '1st Tranche' },
       { id: 'D005', date: '2024-02-27', amount: 210000, utrNumber: 'UTR2024022754321', type: '2nd Tranche' },
@@ -163,6 +168,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 168000,
     disbursementStatus: 'partial',
     repaymentStatus: 'on_time',
+    currentStatus: 'active',
     disbursements: [
       { id: 'D006', date: '2023-12-28', amount: 168000, utrNumber: 'UTR2023122876543', type: '1st Tranche' },
     ],
@@ -194,6 +200,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 384000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'on_time',
+    currentStatus: 'active',
     disbursements: [
       { id: 'D007', date: '2024-02-10', amount: 192000, utrNumber: 'UTR2024021087654', type: '1st Tranche' },
       { id: 'D008', date: '2024-02-12', amount: 192000, utrNumber: 'UTR2024021298765', type: 'Final' },
@@ -225,6 +232,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 324000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'overdue',
+    currentStatus: 'early_move_out',
     disbursements: [
       { id: 'D009', date: '2024-03-05', amount: 324000, utrNumber: 'UTR2024030521098', type: '1st Tranche' },
     ],
@@ -254,6 +262,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 360000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'on_time',
+    currentStatus: 'active',
     disbursements: [
       { id: 'D010', date: '2024-01-15', amount: 180000, utrNumber: 'UTR2024011532109', type: '1st Tranche' },
       { id: 'D011', date: '2024-01-18', amount: 180000, utrNumber: 'UTR2024011843210', type: '2nd Tranche' },
@@ -286,6 +295,7 @@ export const residents: Resident[] = [
     totalAdvanceDisbursed: 288000,
     disbursementStatus: 'fully_disbursed',
     repaymentStatus: 'advance_paid',
+    currentStatus: 'extended',
     disbursements: [
       { id: 'D012', date: '2024-02-01', amount: 288000, utrNumber: 'UTR2024020121098', type: '1st Tranche' },
     ],
