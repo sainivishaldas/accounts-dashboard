@@ -30,7 +30,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
         </Button>
 
         {/* User Menu */}
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -50,7 +50,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
     </header>
   );

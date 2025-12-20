@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
+import { NavLink as RouterNavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
   Building2,
+  LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -19,6 +22,13 @@ const navigation = [
 export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <aside
@@ -72,8 +82,40 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      {/* Collapse Toggle */}
-      <div className="border-t border-sidebar-border p-3">
+      {/* User Info & Sign Out */}
+      <div className="border-t border-sidebar-border p-3 space-y-2">
+        {/* User Info */}
+        <div className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 bg-sidebar-accent/30",
+          collapsed && "justify-center px-0"
+        )}>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary shrink-0">
+            <User className="h-4 w-4 text-sidebar-primary-foreground" />
+          </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-sidebar-foreground truncate">
+                {user?.email || 'User'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Sign Out */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSignOut}
+          className={cn(
+            "w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          <LogOut className="h-5 w-5" />
+          {!collapsed && <span>Sign Out</span>}
+        </Button>
+
+        {/* Collapse Toggle */}
         <Button
           variant="ghost"
           size="sm"
