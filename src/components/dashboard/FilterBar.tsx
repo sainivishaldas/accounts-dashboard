@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { cities, properties } from "@/data/mockData";
+import { useCities, usePropertyNames } from "@/hooks/useSupabase";
 import type { DateRange } from "react-day-picker";
 
 interface FilterBarProps {
@@ -37,6 +37,9 @@ export function FilterBar({
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
+  
+  const { data: cities = [] } = useCities();
+  const { data: properties = [] } = usePropertyNames();
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);

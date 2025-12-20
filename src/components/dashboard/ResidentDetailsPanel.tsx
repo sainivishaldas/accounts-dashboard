@@ -3,11 +3,11 @@ import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { Resident } from "@/data/mockData";
+import type { ResidentWithRelations } from "@/types/database";
 import { format } from "date-fns";
 
 interface ResidentDetailsPanelProps {
-  resident: Resident;
+  resident: ResidentWithRelations;
   onClose: () => void;
 }
 
@@ -24,9 +24,9 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
 
   const totalCollected = resident.repayments
     .filter((r) => r.status === "paid" || r.status === "advance")
-    .reduce((sum, r) => sum + r.amountPaid, 0);
+    .reduce((sum, r) => sum + Number(r.amount_paid), 0);
 
-  const outstanding = resident.totalAdvanceDisbursed - totalCollected;
+  const outstanding = Number(resident.total_advance_disbursed) - totalCollected;
 
   return (
     <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-card shadow-elevated animate-slide-in-right overflow-hidden flex flex-col border-l border-border">
@@ -36,10 +36,10 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold">{resident.name}</h2>
-              <StatusBadge status={resident.repaymentStatus} />
+              <StatusBadge status={resident.repayment_status} />
             </div>
             <p className="text-sm text-muted-foreground">
-              {resident.id} • {resident.propertyName}
+              {resident.resident_id} • {resident.property?.name || 'N/A'}
             </p>
           </div>
           <div className="flex h-36 w-36 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-4xl shrink-0">
@@ -57,7 +57,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
         <div className="grid grid-cols-3 gap-4 p-6 border-b border-border bg-muted/30">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Package Amount</p>
-            <p className="text-lg font-semibold amount">{formatCurrency(resident.monthlyRent)}</p>
+            <p className="text-lg font-semibold amount">{formatCurrency(Number(resident.monthly_rent))}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Disbursed</p>
@@ -92,7 +92,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
           <TabsContent value="disbursements" className="p-6 space-y-4 mt-0">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Disbursement Schedule</h3>
-              <StatusBadge status={resident.disbursementStatus} />
+              <StatusBadge status={resident.disbursement_status} />
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="finance-table">
@@ -108,8 +108,8 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                   {resident.disbursements.map((d) => (
                     <tr key={d.id}>
                       <td>{format(new Date(d.date), "MMM d, yyyy")}</td>
-                      <td className="amount font-medium">{formatCurrency(d.amount)}</td>
-                      <td className="font-mono text-xs text-muted-foreground">{d.utrNumber}</td>
+                      <td className="amount font-medium">{formatCurrency(Number(d.amount))}</td>
+                      <td className="font-mono text-xs text-muted-foreground">{d.utr_number}</td>
                       <td>
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted">
                           {d.type}
@@ -121,7 +121,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                 <tfoot>
                   <tr className="bg-muted/50 font-medium">
                     <td>Total</td>
-                    <td className="amount">{formatCurrency(resident.totalAdvanceDisbursed)}</td>
+                    <td className="amount">{formatCurrency(Number(resident.total_advance_disbursed))}</td>
                     <td colSpan={2}></td>
                   </tr>
                 </tfoot>
@@ -134,7 +134,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Monthly Repayment Schedule</h3>
               <p className="text-sm text-muted-foreground">
-                Monthly Rent: <span className="font-medium amount">{formatCurrency(resident.monthlyRent)}</span>
+                Monthly Rent: <span className="font-medium amount">{formatCurrency(Number(resident.monthly_rent))}</span>
               </p>
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
@@ -152,13 +152,13 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                   {resident.repayments.map((r) => (
                     <tr key={r.id}>
                       <td className="font-medium">{r.month}</td>
-                      <td>{format(new Date(r.dueDate), "MMM d, yyyy")}</td>
-                      <td className="amount">{formatCurrency(r.rentAmount)}</td>
+                      <td>{format(new Date(r.due_date), "MMM d, yyyy")}</td>
+                      <td className="amount">{formatCurrency(Number(r.rent_amount))}</td>
                       <td>
                         <StatusBadge status={r.status} />
                       </td>
                       <td className="text-muted-foreground">
-                        {r.actualPaymentDate ? format(new Date(r.actualPaymentDate), "MMM d, yyyy") : "—"}
+                        {r.actual_payment_date ? format(new Date(r.actual_payment_date), "MMM d, yyyy") : "—"}
                       </td>
                     </tr>
                   ))}
@@ -177,18 +177,18 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
                   <p className="text-sm text-muted-foreground">Property Name</p>
-                  <p className="font-medium">{resident.propertyName}</p>
+                  <p className="font-medium">{resident.property?.name || 'N/A'}</p>
                 </div>
                 <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border">
                   <p className="text-sm text-muted-foreground">Room / Unit</p>
-                  <p className="font-medium">{resident.roomNumber}</p>
+                  <p className="font-medium">{resident.room_number}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="font-medium">{resident.propertyAddress}</p>
+                  <p className="font-medium">{resident.property?.address || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -201,15 +201,15 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg bg-muted/30 border border-border">
                   <p className="text-sm text-muted-foreground">Start Date</p>
-                  <p className="font-medium">{format(new Date(resident.leaseStartDate), "MMM d, yyyy")}</p>
+                  <p className="font-medium">{resident.lease_start_date ? format(new Date(resident.lease_start_date), "MMM d, yyyy") : 'N/A'}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/30 border border-border">
                   <p className="text-sm text-muted-foreground">End Date</p>
-                  <p className="font-medium">{format(new Date(resident.leaseEndDate), "MMM d, yyyy")}</p>
+                  <p className="font-medium">{resident.lease_end_date ? format(new Date(resident.lease_end_date), "MMM d, yyyy") : 'N/A'}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/30 border border-border">
                   <p className="text-sm text-muted-foreground">Lock-in Period</p>
-                  <p className="font-medium">{resident.lockInPeriod} months</p>
+                  <p className="font-medium">{resident.lock_in_period} months</p>
                 </div>
               </div>
             </div>
@@ -222,18 +222,18 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg border border-border space-y-3">
                   <p className="text-sm font-medium text-muted-foreground">Relationship Manager</p>
-                  <p className="font-medium">{resident.relationshipManager}</p>
+                  <p className="font-medium">{resident.relationship_manager || 'N/A'}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-3.5 w-3.5" />
-                    {resident.rmContact}
+                    {resident.rm_contact || 'N/A'}
                   </div>
                 </div>
                 <div className="p-4 rounded-lg border border-border space-y-3">
                   <p className="text-sm font-medium text-muted-foreground">Property Manager</p>
-                  <p className="font-medium">{resident.propertyManager}</p>
+                  <p className="font-medium">{resident.property?.property_manager_name || 'N/A'}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-3.5 w-3.5" />
-                    {resident.pmContact}
+                    {resident.property?.property_manager_number || 'N/A'}
                   </div>
                 </div>
               </div>

@@ -16,11 +16,11 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ResidentDetailsPanel } from "./ResidentDetailsPanel";
-import type { Resident } from "@/data/mockData";
+import type { ResidentWithRelations } from "@/types/database";
 import { format } from "date-fns";
 
 interface ResidentsTableProps {
-  residents: Resident[];
+  residents: ResidentWithRelations[];
 }
 
 function formatCurrency(amount: number) {
@@ -31,13 +31,13 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-type SortField = "name" | "monthlyRent" | "leaseStartDate" | "leaseEndDate" | "repaymentStatus";
+type SortField = "name" | "monthly_rent" | "lease_start_date" | "lease_end_date" | "repayment_status";
 type SortDirection = "asc" | "desc";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500];
 
 export function ResidentsTable({ residents }: ResidentsTableProps) {
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [selectedResident, setSelectedResident] = useState<ResidentWithRelations | null>(null);
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,17 +58,17 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
       case "name":
         comparison = a.name.localeCompare(b.name);
         break;
-      case "monthlyRent":
-        comparison = a.monthlyRent - b.monthlyRent;
+      case "monthly_rent":
+        comparison = Number(a.monthly_rent) - Number(b.monthly_rent);
         break;
-      case "leaseStartDate":
-        comparison = new Date(a.leaseStartDate).getTime() - new Date(b.leaseStartDate).getTime();
+      case "lease_start_date":
+        comparison = new Date(a.lease_start_date || 0).getTime() - new Date(b.lease_start_date || 0).getTime();
         break;
-      case "leaseEndDate":
-        comparison = new Date(a.leaseEndDate).getTime() - new Date(b.leaseEndDate).getTime();
+      case "lease_end_date":
+        comparison = new Date(a.lease_end_date || 0).getTime() - new Date(b.lease_end_date || 0).getTime();
         break;
-      case "repaymentStatus":
-        comparison = a.repaymentStatus.localeCompare(b.repaymentStatus);
+      case "repayment_status":
+        comparison = a.repayment_status.localeCompare(b.repayment_status);
         break;
     }
     return sortDirection === "asc" ? comparison : -comparison;
@@ -107,13 +107,13 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                 <th>Property</th>
                 <th>City</th>
                 <th>
-                  <SortHeader field="leaseStartDate">Lease Start</SortHeader>
+                  <SortHeader field="lease_start_date">Lease Start</SortHeader>
                 </th>
                 <th>
-                  <SortHeader field="leaseEndDate">Lease End</SortHeader>
+                  <SortHeader field="lease_end_date">Lease End</SortHeader>
                 </th>
                 <th>
-                  <SortHeader field="monthlyRent">Package Amount</SortHeader>
+                  <SortHeader field="monthly_rent">Package Amount</SortHeader>
                 </th>
                 <th>Disbursement</th>
                 <th>Current Status</th>
@@ -133,28 +133,28 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                   <td>
                     <div>
                       <p className="font-medium group-hover:text-primary transition-colors">{resident.name}</p>
-                      <p className="text-xs text-muted-foreground">{resident.id}</p>
+                      <p className="text-xs text-muted-foreground">{resident.resident_id}</p>
                     </div>
                   </td>
                   <td>
                     <div>
-                      <p className="font-medium">{resident.propertyName}</p>
-                      <p className="text-xs text-muted-foreground">{resident.roomNumber}</p>
+                      <p className="font-medium">{resident.property?.name || 'N/A'}</p>
+                      <p className="text-xs text-muted-foreground">{resident.room_number}</p>
                     </div>
                   </td>
-                  <td>{resident.city}</td>
+                  <td>{resident.property?.city || 'N/A'}</td>
                   <td>
-                    <p className="text-sm">{format(new Date(resident.leaseStartDate), "MMM d, yyyy")}</p>
+                    <p className="text-sm">{resident.lease_start_date ? format(new Date(resident.lease_start_date), "MMM d, yyyy") : 'N/A'}</p>
                   </td>
                   <td>
-                    <p className="text-sm">{format(new Date(resident.leaseEndDate), "MMM d, yyyy")}</p>
+                    <p className="text-sm">{resident.lease_end_date ? format(new Date(resident.lease_end_date), "MMM d, yyyy") : 'N/A'}</p>
                   </td>
-                  <td className="amount font-medium">{formatCurrency(resident.monthlyRent)}</td>
+                  <td className="amount font-medium">{formatCurrency(Number(resident.monthly_rent))}</td>
                   <td>
-                    <StatusBadge status={resident.disbursementStatus} />
+                    <StatusBadge status={resident.disbursement_status} />
                   </td>
                   <td>
-                    <StatusBadge status={resident.currentStatus} />
+                    <StatusBadge status={resident.current_status} />
                   </td>
                   <td>
                     <DropdownMenu>

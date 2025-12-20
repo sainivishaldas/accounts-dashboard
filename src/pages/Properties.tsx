@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, MoreHorizontal, Building2, MapPin, Phone, User } from "lucide-react";
+import { Plus, Pencil, MoreHorizontal, Building2, MapPin, Phone, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,87 +16,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { StatusBadge, type PropertyStatus } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useProperties, useCreateProperty, useUpdateProperty } from "@/hooks/useSupabase";
+import type { Property, PropertyStatus } from "@/types/database";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
-interface Property {
-  id: string;
+interface FormData {
   name: string;
   address: string;
   city: string;
-  numberOfUnits: number;
-  propertyManagerName: string;
-  propertyManagerNumber: string;
+  number_of_units: number;
+  property_manager_name: string;
+  property_manager_number: string;
   status: PropertyStatus;
 }
 
-const initialProperties: Property[] = [
-  {
-    id: "PROP001",
-    name: "Truliv Koramangala",
-    address: "123 Koramangala 5th Block, Near Forum Mall",
-    city: "Bangalore",
-    numberOfUnits: 45,
-    propertyManagerName: "Rajesh Kumar",
-    propertyManagerNumber: "+91 98765 43210",
-    status: "active",
-  },
-  {
-    id: "PROP002",
-    name: "Truliv HSR Layout",
-    address: "456 HSR Layout Sector 2, Near Agara Lake",
-    city: "Bangalore",
-    numberOfUnits: 32,
-    propertyManagerName: "Priya Sharma",
-    propertyManagerNumber: "+91 98765 43211",
-    status: "active",
-  },
-  {
-    id: "PROP003",
-    name: "Truliv Indiranagar",
-    address: "789 Indiranagar 100ft Road",
-    city: "Bangalore",
-    numberOfUnits: 28,
-    propertyManagerName: "Amit Patel",
-    propertyManagerNumber: "+91 98765 43212",
-    status: "active",
-  },
-  {
-    id: "PROP004",
-    name: "Truliv Gurgaon",
-    address: "321 Sector 54, Golf Course Road",
-    city: "Gurgaon",
-    numberOfUnits: 56,
-    propertyManagerName: "Neha Gupta",
-    propertyManagerNumber: "+91 98765 43213",
-    status: "active",
-  },
-  {
-    id: "PROP005",
-    name: "Truliv Whitefield",
-    address: "555 Whitefield Main Road, Near Phoenix Mall",
-    city: "Bangalore",
-    numberOfUnits: 40,
-    propertyManagerName: "Suresh Reddy",
-    propertyManagerNumber: "+91 98765 43214",
-    status: "inactive",
-  },
-];
-
-const emptyProperty: Omit<Property, 'id'> = {
+const emptyFormData: FormData = {
   name: "",
   address: "",
   city: "",
-  numberOfUnits: 0,
-  propertyManagerName: "",
-  propertyManagerNumber: "",
+  number_of_units: 0,
+  property_manager_name: "",
+  property_manager_number: "",
   status: "active",
 };
 
 export default function Properties() {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const { data: properties = [], isLoading } = useProperties();
+  const createProperty = useCreateProperty();
+  const updateProperty = useUpdateProperty();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState<Omit<Property, 'id'>>(emptyProperty);
+  const [formData, setFormData] = useState<FormData>(emptyFormData);
 
   const handleOpenDialog = (property?: Property) => {
     if (property) {
@@ -105,50 +57,61 @@ export default function Properties() {
         name: property.name,
         address: property.address,
         city: property.city,
-        numberOfUnits: property.numberOfUnits,
-        propertyManagerName: property.propertyManagerName,
-        propertyManagerNumber: property.propertyManagerNumber,
+        number_of_units: property.number_of_units,
+        property_manager_name: property.property_manager_name || '',
+        property_manager_number: property.property_manager_number || '',
         status: property.status,
       });
     } else {
       setEditingProperty(null);
-      setFormData(emptyProperty);
+      setFormData(emptyFormData);
     }
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editingProperty) {
-      setProperties(properties.map(p => 
-        p.id === editingProperty.id 
-          ? { ...p, ...formData }
-          : p
-      ));
+      await updateProperty.mutateAsync({
+        id: editingProperty.id,
+        updates: formData,
+      });
     } else {
-      const newProperty: Property = {
-        id: `PROP${String(properties.length + 1).padStart(3, '0')}`,
+      const propertyId = `PROP${String(properties.length + 1).padStart(3, '0')}`;
+      await createProperty.mutateAsync({
+        property_id: propertyId,
         ...formData,
-      };
-      setProperties([...properties, newProperty]);
+      });
     }
     setIsDialogOpen(false);
     setEditingProperty(null);
-    setFormData(emptyProperty);
+    setFormData(emptyFormData);
   };
 
-  const toggleStatus = (id: string) => {
-    setProperties(properties.map(p => 
-      p.id === id 
-        ? { ...p, status: p.status === 'active' ? 'inactive' : 'active' }
-        : p
-    ));
+  const toggleStatus = async (property: Property) => {
+    await updateProperty.mutateAsync({
+      id: property.id,
+      updates: { status: property.status === 'active' ? 'inactive' : 'active' },
+    });
   };
 
   const activeCount = properties.filter(p => p.status === 'active').length;
   const inactiveCount = properties.filter(p => p.status === 'inactive').length;
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Properties" />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full">
+      <DashboardHeader title="Properties" />
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -203,8 +166,8 @@ export default function Properties() {
                 <Input
                   id="units"
                   type="number"
-                  value={formData.numberOfUnits}
-                  onChange={(e) => setFormData({ ...formData, numberOfUnits: parseInt(e.target.value) || 0 })}
+                  value={formData.number_of_units}
+                  onChange={(e) => setFormData({ ...formData, number_of_units: parseInt(e.target.value) || 0 })}
                   placeholder="0"
                 />
               </div>
@@ -212,8 +175,8 @@ export default function Properties() {
                 <Label htmlFor="pmName">Property Manager Name</Label>
                 <Input
                   id="pmName"
-                  value={formData.propertyManagerName}
-                  onChange={(e) => setFormData({ ...formData, propertyManagerName: e.target.value })}
+                  value={formData.property_manager_name}
+                  onChange={(e) => setFormData({ ...formData, property_manager_name: e.target.value })}
                   placeholder="Manager name"
                 />
               </div>
@@ -221,8 +184,8 @@ export default function Properties() {
                 <Label htmlFor="pmNumber">Property Manager Number</Label>
                 <Input
                   id="pmNumber"
-                  value={formData.propertyManagerNumber}
-                  onChange={(e) => setFormData({ ...formData, propertyManagerNumber: e.target.value })}
+                  value={formData.property_manager_number}
+                  onChange={(e) => setFormData({ ...formData, property_manager_number: e.target.value })}
                   placeholder="+91 98765 43210"
                 />
               </div>
@@ -270,17 +233,17 @@ export default function Properties() {
                   </div>
                 </td>
                 <td>{property.city}</td>
-                <td className="text-center">{property.numberOfUnits}</td>
+                <td className="text-center">{property.number_of_units}</td>
                 <td>
                   <div className="flex items-center gap-2">
                     <User className="h-3.5 w-3.5 text-muted-foreground" />
-                    {property.propertyManagerName}
+                    {property.property_manager_name}
                   </div>
                 </td>
                 <td>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-3.5 w-3.5" />
-                    {property.propertyManagerNumber}
+                    {property.property_manager_number}
                   </div>
                 </td>
                 <td>
@@ -298,7 +261,7 @@ export default function Properties() {
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit Property
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toggleStatus(property.id)}>
+                      <DropdownMenuItem onClick={() => toggleStatus(property)}>
                         {property.status === 'active' ? 'Mark Inactive' : 'Mark Active'}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -308,6 +271,7 @@ export default function Properties() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

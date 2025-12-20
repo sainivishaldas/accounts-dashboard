@@ -5,13 +5,14 @@ import {
   TrendingUp, 
   AlertTriangle, 
   CheckCircle2,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { ResidentsTable } from "@/components/dashboard/ResidentsTable";
-import { residents, getSummaryStats } from "@/data/mockData";
+import { useResidents, useDashboardStats } from "@/hooks/useSupabase";
 import { toast } from "sonner";
 
 function formatCurrency(amount: number) {
@@ -28,7 +29,10 @@ const Index = () => {
   const [propertyFilter, setPropertyFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  const stats = getSummaryStats();
+  const { data: residents = [], isLoading: residentsLoading } = useResidents();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+
+  const isLoading = residentsLoading || statsLoading;
 
   const filteredResidents = useMemo(() => {
     return residents.filter((resident) => {
@@ -37,23 +41,23 @@ const Index = () => {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
           resident.name.toLowerCase().includes(query) ||
-          resident.id.toLowerCase().includes(query) ||
-          resident.propertyName.toLowerCase().includes(query);
+          resident.resident_id.toLowerCase().includes(query) ||
+          (resident.property?.name || '').toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
       // City filter
-      if (cityFilter && resident.city !== cityFilter) return false;
+      if (cityFilter && resident.property?.city !== cityFilter) return false;
 
       // Property filter
-      if (propertyFilter && resident.propertyName !== propertyFilter) return false;
+      if (propertyFilter && resident.property?.name !== propertyFilter) return false;
 
       // Status filter
-      if (statusFilter && resident.repaymentStatus !== statusFilter) return false;
+      if (statusFilter && resident.repayment_status !== statusFilter) return false;
 
       return true;
     });
-  }, [searchQuery, cityFilter, propertyFilter, statusFilter]);
+  }, [residents, searchQuery, cityFilter, propertyFilter, statusFilter]);
 
   const handleExport = (format: "csv" | "excel") => {
     toast.success(`Exporting data as ${format.toUpperCase()}...`, {
@@ -67,19 +71,24 @@ const Index = () => {
         title="Accounting Dashboard" 
       />
 
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Summary Stats */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Disbursed"
-            value={formatCurrency(stats.totalDisbursed)}
+            value={formatCurrency(stats?.total_disbursed || 0)}
             subtitle="Advance rent to Truliv"
             icon={Wallet}
             trend={{ value: 12.5, isPositive: true }}
           />
           <StatCard
             title="Pending Disbursement"
-            value={formatCurrency(stats.totalCollected)}
+            value={formatCurrency(stats?.total_collected || 0)}
             subtitle="Onboarding pending for disbursement"
             icon={TrendingUp}
             variant="success"
@@ -87,14 +96,14 @@ const Index = () => {
           />
           <StatCard
             title="Active Residents"
-            value={stats.activeCount}
-            subtitle={`${stats.onTimeCount} Ontime • ${stats.overdueCount} Overdue`}
+            value={stats?.active_count || 0}
+            subtitle={`${stats?.on_time_count || 0} Ontime • ${stats?.overdue_count || 0} Overdue`}
             icon={Clock}
           />
           <StatCard
             title="Total Residents"
-            value={stats.totalResidents}
-            subtitle={`${stats.activeCount} active • ${stats.inactiveCount} inactive`}
+            value={stats?.total_residents || 0}
+            subtitle={`${stats?.active_count || 0} active • ${stats?.inactive_count || 0} inactive`}
             icon={Users}
           />
         </div>
@@ -106,7 +115,7 @@ const Index = () => {
               <CheckCircle2 className="h-6 w-6 text-success" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.onTimeCount}</p>
+              <p className="text-2xl font-bold">{stats?.on_time_count || 0}</p>
               <p className="text-sm text-muted-foreground">On-time payments</p>
             </div>
           </div>
@@ -115,7 +124,7 @@ const Index = () => {
               <TrendingUp className="h-6 w-6 text-warning" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.advanceCount}</p>
+              <p className="text-2xl font-bold">{stats?.advance_count || 0}</p>
               <p className="text-sm text-muted-foreground">Advance payments</p>
             </div>
           </div>
@@ -124,7 +133,7 @@ const Index = () => {
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.overdueCount}</p>
+              <p className="text-2xl font-bold">{stats?.overdue_count || 0}</p>
               <p className="text-sm text-muted-foreground">Overdue accounts</p>
             </div>
           </div>
@@ -150,6 +159,7 @@ const Index = () => {
           <ResidentsTable residents={filteredResidents} />
         </div>
       </div>
+      )}
     </div>
   );
 };
