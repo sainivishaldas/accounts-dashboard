@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ChevronRight, ArrowUpDown, MoreHorizontal, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import { format } from "date-fns";
 
 interface ResidentsTableProps {
   residents: ResidentWithRelations[];
+  onEditResident?: (resident: ResidentWithRelations) => void;
 }
 
 function formatCurrency(amount: number) {
@@ -36,7 +37,7 @@ type SortDirection = "asc" | "desc";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500];
 
-export function ResidentsTable({ residents }: ResidentsTableProps) {
+export function ResidentsTable({ residents, onEditResident }: ResidentsTableProps) {
   const [selectedResident, setSelectedResident] = useState<ResidentWithRelations | null>(null);
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -164,6 +165,15 @@ export function ResidentsTable({ residents }: ResidentsTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {onEditResident && (
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            onEditResident(resident);
+                          }}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit Case
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => setSelectedResident(resident)}>
                           View Details
                         </DropdownMenuItem>

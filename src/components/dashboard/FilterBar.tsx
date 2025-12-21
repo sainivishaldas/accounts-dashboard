@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, Download, Calendar, X } from "lucide-react";
+import { Search, Filter, Download, Calendar, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,7 @@ interface FilterBarProps {
   onPropertyFilter: (property: string | null) => void;
   onStatusFilter: (status: string | null) => void;
   onExport: (format: "csv" | "excel") => void;
+  onNewCase?: () => void;
 }
 
 export function FilterBar({
@@ -33,6 +34,7 @@ export function FilterBar({
   onPropertyFilter,
   onStatusFilter,
   onExport,
+  onNewCase,
 }: FilterBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -72,6 +74,17 @@ export function FilterBar({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {onNewCase && (
+            <Button
+              size="sm"
+              onClick={onNewCase}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              New Case
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"
