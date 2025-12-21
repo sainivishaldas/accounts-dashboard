@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertiesApi, residentsApi, dashboardApi } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { canCreateResident, canEditResident, canDeleteResident, canCreateProperty, canEditProperty, canDeleteProperty } from '@/lib/permissions';
 import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate } from '@/types/database';
 import { toast } from 'sonner';
 
@@ -67,9 +69,15 @@ export function useResident(id: string) {
 
 export function useCreateResident() {
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
 
   return useMutation({
-    mutationFn: (resident: ResidentInsert) => residentsApi.create(resident),
+    mutationFn: async (resident: ResidentInsert) => {
+      if (!canCreateResident(userRole)) {
+        throw new Error('You do not have permission to create cases');
+      }
+      return residentsApi.create(resident);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['residents'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
@@ -83,10 +91,15 @@ export function useCreateResident() {
 
 export function useUpdateResident() {
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: ResidentUpdate }) =>
-      residentsApi.update(id, updates),
+    mutationFn: async ({ id, updates }: { id: string; updates: ResidentUpdate }) => {
+      if (!canEditResident(userRole)) {
+        throw new Error('You do not have permission to edit cases');
+      }
+      return residentsApi.update(id, updates);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['residents'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
@@ -100,9 +113,15 @@ export function useUpdateResident() {
 
 export function useDeleteResident() {
   const queryClient = useQueryClient();
+  const { userRole } = useAuth();
 
   return useMutation({
-    mutationFn: (id: string) => residentsApi.delete(id),
+    mutationFn: async (id: string) => {
+      if (!canDeleteResident(userRole)) {
+        throw new Error('You do not have permission to delete cases');
+      }
+      return residentsApi.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['residents'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
@@ -135,9 +154,15 @@ export function useProperty(id: string) {
 
 export function useCreateProperty() {
   const queryClient = useQueryClient();
-  
+  const { userRole } = useAuth();
+
   return useMutation({
-    mutationFn: (property: PropertyInsert) => propertiesApi.create(property),
+    mutationFn: async (property: PropertyInsert) => {
+      if (!canCreateProperty(userRole)) {
+        throw new Error('You do not have permission to create properties');
+      }
+      return propertiesApi.create(property);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['cities'] });
@@ -152,10 +177,15 @@ export function useCreateProperty() {
 
 export function useUpdateProperty() {
   const queryClient = useQueryClient();
-  
+  const { userRole } = useAuth();
+
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: PropertyUpdate }) => 
-      propertiesApi.update(id, updates),
+    mutationFn: async ({ id, updates }: { id: string; updates: PropertyUpdate }) => {
+      if (!canEditProperty(userRole)) {
+        throw new Error('You do not have permission to edit properties');
+      }
+      return propertiesApi.update(id, updates);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['cities'] });
@@ -170,9 +200,15 @@ export function useUpdateProperty() {
 
 export function useDeleteProperty() {
   const queryClient = useQueryClient();
-  
+  const { userRole } = useAuth();
+
   return useMutation({
-    mutationFn: (id: string) => propertiesApi.delete(id),
+    mutationFn: async (id: string) => {
+      if (!canDeleteProperty(userRole)) {
+        throw new Error('You do not have permission to delete properties');
+      }
+      return propertiesApi.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['cities'] });

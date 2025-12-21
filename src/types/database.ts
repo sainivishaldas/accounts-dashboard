@@ -5,10 +5,34 @@ export type CurrentStatus = 'active' | 'move_out' | 'early_move_out' | 'extended
 export type PropertyStatus = 'active' | 'inactive';
 export type DisbursementType = '1st Tranche' | '2nd Tranche' | 'Final';
 export type PaymentMode = 'Manual' | 'NACH';
+export type UserRole = 'admin' | 'viewer';
 
 export interface Database {
   public: {
     Tables: {
+      user_profiles: {
+        Row: {
+          id: string;
+          email: string;
+          role: UserRole;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          role?: UserRole;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          role?: UserRole;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       properties: {
         Row: {
           id: string;
@@ -237,6 +261,10 @@ export type RepaymentInsert = Database['public']['Tables']['repayments']['Insert
 export type RepaymentUpdate = Database['public']['Tables']['repayments']['Update'];
 
 export type DashboardStats = Database['public']['Views']['dashboard_stats']['Row'];
+
+export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
+export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update'];
 
 // Extended resident type with relations
 export interface ResidentWithRelations extends DbResident {

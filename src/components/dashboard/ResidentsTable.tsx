@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ResidentDetailsPanel } from "./ResidentDetailsPanel";
+import { useAuth } from "@/contexts/AuthContext";
+import { canEditResident } from "@/lib/permissions";
 import type { ResidentWithRelations } from "@/types/database";
 import { format } from "date-fns";
 
@@ -43,6 +45,8 @@ export function ResidentsTable({ residents, onEditResident }: ResidentsTableProp
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
+
+  const { userRole } = useAuth();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -165,7 +169,7 @@ export function ResidentsTable({ residents, onEditResident }: ResidentsTableProp
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {onEditResident && (
+                        {onEditResident && canEditResident(userRole) && (
                           <DropdownMenuItem onClick={(e) => {
                             e.stopPropagation();
                             onEditResident(resident);

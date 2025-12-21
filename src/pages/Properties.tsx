@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useProperties, useCreateProperty, useUpdateProperty } from "@/hooks/useSupabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { canCreateProperty, canEditProperty } from "@/lib/permissions";
 import type { Property, PropertyStatus } from "@/types/database";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
@@ -45,7 +47,8 @@ export default function Properties() {
   const { data: properties = [], isLoading } = useProperties();
   const createProperty = useCreateProperty();
   const updateProperty = useUpdateProperty();
-  
+  const { userRole } = useAuth();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [formData, setFormData] = useState<FormData>(emptyFormData);
@@ -121,13 +124,14 @@ export default function Properties() {
             {activeCount} Active • {inactiveCount} Inactive
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Property
-            </Button>
-          </DialogTrigger>
+        {canCreateProperty(userRole) && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Property
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>
@@ -201,6 +205,7 @@ export default function Properties() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Properties Table */}
@@ -251,22 +256,24 @@ export default function Properties() {
                   <StatusBadge status={property.status} />
                 </td>
                 <td>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleOpenDialog(property)}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit Property
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toggleStatus(property)}>
-                        {property.status === 'active' ? 'Mark Inactive' : 'Mark Active'}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {canEditProperty(userRole) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleOpenDialog(property)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit Property
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleStatus(property)}>
+                          {property.status === 'active' ? 'Mark Inactive' : 'Mark Active'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </td>
               </tr>
             ))}

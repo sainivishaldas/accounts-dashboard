@@ -17,6 +17,8 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { useCities, usePropertyNames } from "@/hooks/useSupabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { canCreateResident } from "@/lib/permissions";
 import type { DateRange } from "react-day-picker";
 
 interface FilterBarProps {
@@ -39,7 +41,8 @@ export function FilterBar({
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
-  
+
+  const { userRole } = useAuth();
   const { data: cities = [] } = useCities();
   const { data: properties = [] } = usePropertyNames();
 
@@ -74,7 +77,7 @@ export function FilterBar({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {onNewCase && (
+          {onNewCase && canCreateResident(userRole) && (
             <Button
               size="sm"
               onClick={onNewCase}
