@@ -109,9 +109,10 @@ export default function Properties() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <DashboardHeader title="Properties" />
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -271,6 +272,7 @@ export default function Properties() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
       </div>
     </div>
