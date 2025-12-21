@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch user role from database
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('🔍 Fetching role for user:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('role')
@@ -33,26 +34,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Error fetching user role:', error);
+        console.error('❌ Error fetching user role:', error);
         setUserRole('viewer'); // Default to viewer on error
         return;
       }
 
+      console.log('✅ User role fetched:', data?.role);
       setUserRole(data?.role ?? 'viewer');
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('❌ Error fetching user role:', error);
       setUserRole('viewer');
     }
   };
 
   useEffect(() => {
     // Get initial session
+    console.log('🚀 AuthContext: Initializing...');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('📊 Initial session:', session?.user?.email || 'No user');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        console.log('👤 User found, fetching role...');
         fetchUserRole(session.user.id);
       } else {
+        console.log('❌ No user session found');
         setUserRole(null);
       }
       setLoading(false);
@@ -61,11 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        console.log('🔄 Auth state changed:', _event, session?.user?.email || 'No user');
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          console.log('👤 User authenticated, fetching role...');
           fetchUserRole(session.user.id);
         } else {
+          console.log('❌ User logged out');
           setUserRole(null);
         }
         setLoading(false);
