@@ -15,6 +15,7 @@ import { ResidentsTable } from "@/components/dashboard/ResidentsTable";
 import { NewCaseDialog } from "@/components/dashboard/NewCaseDialog";
 import { useResidents, useDashboardStats } from "@/hooks/useSupabase";
 import { toast } from "sonner";
+import type { ResidentWithRelations } from "@/types/database";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -30,6 +31,7 @@ const Index = () => {
   const [propertyFilter, setPropertyFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isNewCaseDialogOpen, setIsNewCaseDialogOpen] = useState(false);
+  const [editingResident, setEditingResident] = useState<ResidentWithRelations | null>(null);
 
   const { data: residents = [], isLoading: residentsLoading } = useResidents();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
@@ -160,14 +162,26 @@ const Index = () => {
               {filteredResidents.length} of {residents.length} residents
             </p>
           </div>
-          <ResidentsTable residents={filteredResidents} />
+          <ResidentsTable
+            residents={filteredResidents}
+            onEditResident={(resident) => {
+              setEditingResident(resident);
+              setIsNewCaseDialogOpen(true);
+            }}
+          />
         </div>
         </div>
 
-        {/* New Case Dialog */}
+        {/* New/Edit Case Dialog */}
         <NewCaseDialog
           open={isNewCaseDialogOpen}
-          onOpenChange={setIsNewCaseDialogOpen}
+          onOpenChange={(open) => {
+            setIsNewCaseDialogOpen(open);
+            if (!open) {
+              setEditingResident(null);
+            }
+          }}
+          resident={editingResident}
         />
       </div>
       )}
