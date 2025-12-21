@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertiesApi, residentsApi, dashboardApi } from '@/services/api';
-import type { PropertyInsert, PropertyUpdate } from '@/types/database';
+import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate } from '@/types/database';
 import { toast } from 'sonner';
 
 // =============================================
@@ -62,6 +62,55 @@ export function useResident(id: string) {
     queryKey: ['residents', id],
     queryFn: () => residentsApi.getById(id),
     enabled: !!id,
+  });
+}
+
+export function useCreateResident() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (resident: ResidentInsert) => residentsApi.create(resident),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Case created successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to create case', { description: error.message });
+    },
+  });
+}
+
+export function useUpdateResident() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: ResidentUpdate }) =>
+      residentsApi.update(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Resident updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update resident', { description: error.message });
+    },
+  });
+}
+
+export function useDeleteResident() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => residentsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Resident deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete resident', { description: error.message });
+    },
   });
 }
 
