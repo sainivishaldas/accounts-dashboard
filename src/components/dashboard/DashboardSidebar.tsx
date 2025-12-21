@@ -33,7 +33,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 shrink-0",
         collapsed ? "w-16" : "w-64"
       )}
     >
