@@ -3,7 +3,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 
 export function DashboardLayout() {
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <DashboardSidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         <Outlet />

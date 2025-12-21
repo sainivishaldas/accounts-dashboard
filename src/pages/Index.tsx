@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { 
-  Wallet, 
-  Users, 
-  TrendingUp, 
-  AlertTriangle, 
+import {
+  Wallet,
+  Users,
+  TrendingUp,
+  AlertTriangle,
   CheckCircle2,
   Clock,
   Loader2
@@ -12,6 +12,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { ResidentsTable } from "@/components/dashboard/ResidentsTable";
+import { NewCaseDialog } from "@/components/dashboard/NewCaseDialog";
 import { useResidents, useDashboardStats } from "@/hooks/useSupabase";
 import { toast } from "sonner";
 
@@ -28,6 +29,7 @@ const Index = () => {
   const [cityFilter, setCityFilter] = useState<string | null>(null);
   const [propertyFilter, setPropertyFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [isNewCaseDialogOpen, setIsNewCaseDialogOpen] = useState(false);
 
   const { data: residents = [], isLoading: residentsLoading } = useResidents();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
@@ -66,9 +68,9 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <DashboardHeader 
-        title="Accounting Dashboard" 
+    <div className="flex flex-col h-full overflow-hidden">
+      <DashboardHeader
+        title="Accounting Dashboard"
       />
 
       {isLoading ? (
@@ -76,7 +78,8 @@ const Index = () => {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : (
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="p-6 space-y-6">
         {/* Summary Stats */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
@@ -146,6 +149,7 @@ const Index = () => {
           onPropertyFilter={setPropertyFilter}
           onStatusFilter={setStatusFilter}
           onExport={handleExport}
+          onNewCase={() => setIsNewCaseDialogOpen(true)}
         />
 
         {/* Master Table */}
@@ -158,6 +162,13 @@ const Index = () => {
           </div>
           <ResidentsTable residents={filteredResidents} />
         </div>
+        </div>
+
+        {/* New Case Dialog */}
+        <NewCaseDialog
+          open={isNewCaseDialogOpen}
+          onOpenChange={setIsNewCaseDialogOpen}
+        />
       </div>
       )}
     </div>
