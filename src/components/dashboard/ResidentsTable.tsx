@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, ArrowUpDown, MoreHorizontal, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +47,16 @@ export function ResidentsTable({ residents, onEditResident }: ResidentsTableProp
   const [pageSize, setPageSize] = useState(500);
 
   const { userRole } = useAuth();
+
+  // Update selectedResident when residents data changes (e.g., after adding a transaction)
+  useEffect(() => {
+    if (selectedResident) {
+      const updatedResident = residents.find(r => r.id === selectedResident.id);
+      if (updatedResident) {
+        setSelectedResident(updatedResident);
+      }
+    }
+  }, [residents, selectedResident?.id]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

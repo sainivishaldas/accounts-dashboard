@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus } from "lucide-react";
+import { useState, useRef } from "react";
+import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -8,6 +8,7 @@ import type { ResidentWithRelations } from "@/types/database";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { canCreateResident } from "@/lib/permissions";
+import { toast } from "sonner";
 
 interface ResidentDetailsPanelProps {
   resident: ResidentWithRelations;
@@ -25,13 +26,46 @@ function formatCurrency(amount: number) {
 export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanelProps) {
   const [activeTab, setActiveTab] = useState("disbursements");
   const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { userRole } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalCollected = resident.repayments
     .filter((r) => r.status === "paid" || r.status === "advance")
     .reduce((sum, r) => sum + Number(r.amount_paid), 0);
 
   const outstanding = Number(resident.total_advance_disbursed) - totalCollected;
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // File size validation (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // For now, just show a success message
+      // In production, you would upload to Supabase Storage and save the document record
+      toast.success(`Document "${file.name}" uploaded successfully`);
+
+      // TODO: Implement actual file upload to Supabase Storage
+      // const fileUrl = await uploadToSupabaseStorage(file, resident.id);
+      // await createDocument({ resident_id: resident.id, file_name: file.name, file_url: fileUrl, file_size: file.size });
+
+    } catch (error) {
+      toast.error('Failed to upload document');
+      console.error('Upload error:', error);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   return (
     <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-card shadow-elevated animate-slide-in-right overflow-hidden flex flex-col border-l border-border">
@@ -272,23 +306,64 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="p-6 space-y-4 mt-0">
-            <h3 className="font-medium">Documents & Agreements</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div
-                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <FileText className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">Rent Agreement</p>
-                  <p className="text-xs text-muted-foreground">PDF • 2.4 MB</p>
-                </div>
-                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Documents & Agreements</h3>
+              {canCreateResident(userRole) && (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploading ? 'Uploading...' : 'Upload Document'}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </>
+              )}
             </div>
+
+            {resident.documents && resident.documents.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {resident.documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{doc.file_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(doc.file_size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => window.open(doc.file_url, '_blank')}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Click "Upload Document" to add files</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

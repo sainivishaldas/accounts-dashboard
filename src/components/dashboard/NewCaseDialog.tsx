@@ -50,8 +50,6 @@ interface CaseFormData {
   lease_end_date: Date | null;
   lock_in_period: number;
   monthly_rent: number;
-  security_deposit: number;
-  total_advance_disbursed: number;
   disbursement_status: "fully_disbursed" | "partial";
   repayment_status: "on_time" | "overdue" | "advance_paid";
   current_status: "active" | "move_out" | "early_move_out" | "extended";
@@ -73,7 +71,6 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
     formState: { errors },
     reset,
     setValue,
-    watch,
   } = useForm<CaseFormData>({
     defaultValues: {
       disbursement_status: "partial",
@@ -81,8 +78,6 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
       current_status: "active",
       lock_in_period: 0,
       monthly_rent: 0,
-      security_deposit: 0,
-      total_advance_disbursed: 0,
     },
   });
 
@@ -101,8 +96,6 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
       setValue("pm_contact", resident.pm_contact || "");
       setValue("lock_in_period", resident.lock_in_period || 0);
       setValue("monthly_rent", resident.monthly_rent || 0);
-      setValue("security_deposit", resident.security_deposit || 0);
-      setValue("total_advance_disbursed", resident.total_advance_disbursed || 0);
       setValue("disbursement_status", resident.disbursement_status);
       setValue("repayment_status", resident.repayment_status);
       setValue("current_status", resident.current_status);
@@ -137,8 +130,8 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
         lease_end_date: leaseEndDate ? format(leaseEndDate, "yyyy-MM-dd") : null,
         lock_in_period: Number(data.lock_in_period) || 0,
         monthly_rent: Number(data.monthly_rent) || 0,
-        security_deposit: Number(data.security_deposit) || 0,
-        total_advance_disbursed: Number(data.total_advance_disbursed) || 0,
+        security_deposit: 0,
+        total_advance_disbursed: 0,
         disbursement_status: data.disbursement_status,
         repayment_status: data.repayment_status,
         current_status: data.current_status,
@@ -392,31 +385,11 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
             <h3 className="text-sm font-semibold">Financial Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="monthly_rent">Monthly Rent (₹)</Label>
+                <Label htmlFor="monthly_rent">Package Amount (₹)</Label>
                 <Input
                   id="monthly_rent"
                   type="number"
                   {...register("monthly_rent")}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="security_deposit">Security Deposit (₹)</Label>
-                <Input
-                  id="security_deposit"
-                  type="number"
-                  {...register("security_deposit")}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="total_advance_disbursed">Total Advance Disbursed (₹)</Label>
-                <Input
-                  id="total_advance_disbursed"
-                  type="number"
-                  {...register("total_advance_disbursed")}
                   placeholder="0"
                 />
               </div>
