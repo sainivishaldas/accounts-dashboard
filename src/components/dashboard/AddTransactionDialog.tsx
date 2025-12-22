@@ -36,9 +36,8 @@ interface AddTransactionDialogProps {
 }
 
 interface TransactionFormData {
-  disbursement_id: string;
   date: Date | null;
-  amount: number;
+  amount: string;
   utr_number: string;
   type: DisbursementType;
 }
@@ -56,8 +55,7 @@ export function AddTransactionDialog({ open, onOpenChange, residentId }: AddTran
     watch,
   } = useForm<TransactionFormData>({
     defaultValues: {
-      disbursement_id: "",
-      amount: 0,
+      amount: "",
       utr_number: "",
       type: "FexPrime",
     },
@@ -71,11 +69,14 @@ export function AddTransactionDialog({ open, onOpenChange, residentId }: AddTran
         return;
       }
 
+      // Auto-generate unique disbursement_id
+      const uniqueId = `DIS-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
       const disbursementData: DisbursementInsert = {
-        disbursement_id: data.disbursement_id,
+        disbursement_id: uniqueId,
         resident_id: residentId,
         date: format(transactionDate, "yyyy-MM-dd"),
-        amount: Number(data.amount),
+        amount: parseFloat(data.amount) || 0,
         utr_number: data.utr_number || null,
         type: data.type,
       };
@@ -134,8 +135,12 @@ export function AddTransactionDialog({ open, onOpenChange, residentId }: AddTran
             <Input
               id="amount"
               type="number"
-              {...register("amount", { required: "Amount is required", min: 0 })}
-              placeholder="0"
+              step="0.01"
+              {...register("amount", { 
+                required: "Amount is required", 
+                validate: (value) => parseFloat(value) > 0 || "Amount must be greater than 0"
+              })}
+              placeholder="0.00"
             />
             {errors.amount && (
               <p className="text-sm text-destructive">{errors.amount.message}</p>

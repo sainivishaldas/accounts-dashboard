@@ -31,11 +31,12 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadDocument = useUploadDocument();
 
-  const totalCollected = resident.repayments
-    .filter((r) => r.status === "paid" || r.status === "advance")
-    .reduce((sum, r) => sum + Number(r.amount_paid), 0);
+  // Calculate total disbursed from actual disbursements
+  const totalDisbursed = resident.disbursements
+    .reduce((sum, d) => sum + Number(d.amount), 0);
 
-  const outstanding = Number(resident.total_advance_disbursed) - totalCollected;
+  const packageAmount = Number(resident.monthly_rent);
+  const disbursementPending = packageAmount - totalDisbursed;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -90,16 +91,16 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
         <div className="grid grid-cols-3 gap-4 p-6 border-b border-border bg-muted/30">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Package Amount</p>
-            <p className="text-lg font-semibold amount">{formatCurrency(Number(resident.monthly_rent))}</p>
+            <p className="text-lg font-semibold amount">{formatCurrency(packageAmount)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Disbursed</p>
-            <p className="text-lg font-semibold amount amount-positive">{formatCurrency(totalCollected)}</p>
+            <p className="text-lg font-semibold amount amount-positive">{formatCurrency(totalDisbursed)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Disbursement Pending</p>
-            <p className={`text-lg font-semibold amount ${outstanding > 0 ? "amount-negative" : "amount-positive"}`}>
-              {formatCurrency(outstanding)}
+            <p className={`text-lg font-semibold amount ${disbursementPending > 0 ? "amount-negative" : "amount-positive"}`}>
+              {formatCurrency(disbursementPending)}
             </p>
           </div>
         </div>
@@ -166,7 +167,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                 <tfoot>
                   <tr className="bg-muted/50 font-medium">
                     <td>Total</td>
-                    <td className="amount">{formatCurrency(Number(resident.total_advance_disbursed))}</td>
+                    <td className="amount">{formatCurrency(totalDisbursed)}</td>
                     <td colSpan={2}></td>
                   </tr>
                 </tfoot>

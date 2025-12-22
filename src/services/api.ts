@@ -361,12 +361,17 @@ export const dashboardApi = {
       const residents = await residentsApi.getAll();
       log.info('dashboardApi.getStats', `Calculating stats from ${residents.length} residents`);
       
-      const totalDisbursed = residents.reduce((sum, r) => sum + Number(r.total_advance_disbursed || 0), 0);
-      const totalCollected = residents.reduce((sum, r) => 
-        sum + (r.repayments || [])
-          .filter(p => p.status === 'paid' || p.status === 'advance')
-          .reduce((s, p) => s + Number(p.amount_paid || 0), 0), 0
+      // Calculate cumulative disbursed amount from actual disbursements
+      const totalDisbursed = residents.reduce((sum, r) => 
+        sum + (r.disbursements || []).reduce((s, d) => s + Number(d.amount || 0), 0), 0
       );
+      
+      // Calculate total package amount (monthly_rent) for all residents
+      const totalPackageAmount = residents.reduce((sum, r) => sum + Number(r.monthly_rent || 0), 0);
+      
+      // Pending disbursement = Total Package Amount - Total Disbursed
+      const pendingDisbursement = totalPackageAmount - totalDisbursed;
+      
       const totalOutstanding = residents.reduce((sum, r) => 
         sum + (r.repayments || [])
           .filter(p => p.status === 'pending' || p.status === 'failed')
@@ -380,7 +385,7 @@ export const dashboardApi = {
       
       const stats: DashboardStats = {
         total_disbursed: totalDisbursed,
-        total_collected: totalCollected,
+        total_collected: pendingDisbursement > 0 ? pendingDisbursement : 0, // Pending Disbursement
         total_outstanding: totalOutstanding,
         total_residents: residents.length,
         overdue_count: overdueCount,
