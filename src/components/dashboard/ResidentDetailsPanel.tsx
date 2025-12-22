@@ -8,6 +8,7 @@ import type { ResidentWithRelations } from "@/types/database";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { canCreateResident } from "@/lib/permissions";
+import { useUploadDocument } from "@/hooks/useSupabase";
 import { toast } from "sonner";
 
 interface ResidentDetailsPanelProps {
@@ -26,9 +27,9 @@ function formatCurrency(amount: number) {
 export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanelProps) {
   const [activeTab, setActiveTab] = useState("disbursements");
   const [showAddTransaction, setShowAddTransaction] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const { userRole } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadDocument = useUploadDocument();
 
   const totalCollected = resident.repayments
     .filter((r) => r.status === "paid" || r.status === "advance")
@@ -46,21 +47,14 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
       return;
     }
 
-    setUploading(true);
     try {
-      // For now, just show a success message
-      // In production, you would upload to Supabase Storage and save the document record
-      toast.success(`Document "${file.name}" uploaded successfully`);
-
-      // TODO: Implement actual file upload to Supabase Storage
-      // const fileUrl = await uploadToSupabaseStorage(file, resident.id);
-      // await createDocument({ resident_id: resident.id, file_name: file.name, file_url: fileUrl, file_size: file.size });
-
+      await uploadDocument.mutateAsync({
+        file,
+        residentId: resident.id
+      });
     } catch (error) {
-      toast.error('Failed to upload document');
       console.error('Upload error:', error);
     } finally {
-      setUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -313,11 +307,11 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                   <Button
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
+                    disabled={uploadDocument.isPending}
                     className="gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    {uploading ? 'Uploading...' : 'Upload Document'}
+                    {uploadDocument.isPending ? 'Uploading...' : 'Upload Document'}
                   </Button>
                   <input
                     ref={fileInputRef}

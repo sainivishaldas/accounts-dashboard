@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesApi, residentsApi, dashboardApi, disbursementsApi } from '@/services/api';
+import { propertiesApi, residentsApi, dashboardApi, disbursementsApi, documentsApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { canCreateResident, canEditResident, canDeleteResident, canCreateProperty, canEditProperty, canDeleteProperty } from '@/lib/permissions';
-import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate, DisbursementInsert } from '@/types/database';
+import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate, DisbursementInsert, DocumentInsert } from '@/types/database';
 import { toast } from 'sonner';
 
 // =============================================
@@ -243,6 +243,65 @@ export function useCreateDisbursement() {
     },
     onError: (error: Error) => {
       toast.error('Failed to add transaction', { description: error.message });
+    },
+  });
+}
+
+// =============================================
+// DOCUMENTS HOOKS
+// =============================================
+
+export function useUploadDocument() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ file, residentId }: { file: File; residentId: string }) => {
+      if (!canCreateResident(userRole)) {
+        throw new Error('You do not have permission to upload documents');
+      }
+
+      // Upload file to storage
+      const fileUrl = await documentsApi.uploadFile(file, residentId);
+
+      // Create document record
+      const documentData: DocumentInsert = {
+        resident_id: residentId,
+        file_name: file.name,
+        file_url: fileUrl,
+        file_size: file.size,
+        document_type: 'other',
+      };
+
+      return documentsApi.create(documentData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Document uploaded successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to upload document', { description: error.message });
+    },
+  });
+}
+
+export function useDeleteDocument() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, fileUrl }: { id: string; fileUrl: string }) => {
+      if (!canCreateResident(userRole)) {
+        throw new Error('You do not have permission to delete documents');
+      }
+      return documentsApi.delete(id, fileUrl);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Document deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete document', { description: error.message });
     },
   });
 }

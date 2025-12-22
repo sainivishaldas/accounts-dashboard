@@ -14,6 +14,8 @@ import type {
   DashboardStats,
   ResidentWithRelations,
   PaymentStatus,
+  Document,
+  DocumentInsert,
 } from '@/types/database';
 
 // Logger utility
@@ -141,8 +143,7 @@ export const residentsApi = {
         *,
         property:properties(*),
         disbursements(*),
-        repayments(*),
-        documents(*)
+        repayments(*)
       `)
       .order('created_at', { ascending: false });
 
@@ -150,8 +151,15 @@ export const residentsApi = {
       log.error('residentsApi.getAll', 'Failed to fetch residents', error);
       throw error;
     }
-    log.success('residentsApi.getAll', `Fetched ${data?.length || 0} residents`, data);
-    return (data || []) as ResidentWithRelations[];
+
+    // Add empty documents array for now (until documents table is created)
+    const residentsWithDocuments = (data || []).map(resident => ({
+      ...resident,
+      documents: []
+    }));
+
+    log.success('residentsApi.getAll', `Fetched ${residentsWithDocuments.length} residents`, residentsWithDocuments);
+    return residentsWithDocuments as ResidentWithRelations[];
   },
 
   async getById(id: string): Promise<ResidentWithRelations | null> {
@@ -162,8 +170,7 @@ export const residentsApi = {
         *,
         property:properties(*),
         disbursements(*),
-        repayments(*),
-        documents(*)
+        repayments(*)
       `)
       .eq('id', id);
 
@@ -171,8 +178,14 @@ export const residentsApi = {
       log.error('residentsApi.getById', `Failed to fetch resident ${id}`, error);
       throw error;
     }
-    log.success('residentsApi.getById', `Found resident`, data?.[0]);
-    return (data?.[0] as ResidentWithRelations) || null;
+
+    const residentWithDocuments = data?.[0] ? {
+      ...data[0],
+      documents: []
+    } : null;
+
+    log.success('residentsApi.getById', `Found resident`, residentWithDocuments);
+    return (residentWithDocuments as ResidentWithRelations) || null;
   },
 
   async create(resident: ResidentInsert): Promise<DbResident> {
@@ -424,5 +437,101 @@ export const dashboardApi = {
     const names = data?.map(p => p.name) || [];
     log.success('dashboardApi.getPropertyNames', `Fetched ${names.length} property names`, names);
     return names;
+  },
+};
+
+// =============================================
+// DOCUMENTS API
+// =============================================
+
+export const documentsApi = {
+  async uploadFile(file: File, residentId: string): Promise<string> {
+    log.info('documentsApi.uploadFile', `Uploading file ${file.name} for resident ${residentId}`);
+
+    // Create a unique file name
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${residentId}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      log.error('documentsApi.uploadFile', 'Failed to upload file', error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('documents')
+      .getPublicUrl(fileName);
+
+    log.success('documentsApi.uploadFile', 'File uploaded successfully', { fileName, publicUrl });
+    return publicUrl;
+  },
+
+  async create(document: DocumentInsert): Promise<Document> {
+    log.info('documentsApi.create', 'Creating document record', document);
+    const { data, error } = await supabase
+      .from('documents')
+      .insert(document)
+      .select();
+
+    if (error) {
+      log.error('documentsApi.create', 'Failed to create document', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error('Failed to create document - no data returned');
+    }
+
+    log.success('documentsApi.create', 'Created document', data[0]);
+    return data[0];
+  },
+
+  async deleteFile(fileUrl: string): Promise<void> {
+    log.info('documentsApi.deleteFile', `Deleting file ${fileUrl}`);
+
+    // Extract file path from URL
+    const urlParts = fileUrl.split('/documents/');
+    if (urlParts.length < 2) {
+      throw new Error('Invalid file URL');
+    }
+    const filePath = urlParts[1];
+
+    const { error } = await supabase.storage
+      .from('documents')
+      .remove([filePath]);
+
+    if (error) {
+      log.error('documentsApi.deleteFile', 'Failed to delete file', error);
+      throw error;
+    }
+
+    log.success('documentsApi.deleteFile', 'File deleted successfully');
+  },
+
+  async delete(id: string, fileUrl: string): Promise<void> {
+    log.info('documentsApi.delete', `Deleting document ${id}`);
+
+    // Delete file from storage first
+    await this.deleteFile(fileUrl);
+
+    // Delete document record
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      log.error('documentsApi.delete', 'Failed to delete document record', error);
+      throw error;
+    }
+
+    log.success('documentsApi.delete', 'Document deleted successfully');
   },
 };
