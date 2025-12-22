@@ -176,6 +176,7 @@ export function AddTransactionDialog({ open, onOpenChange, residentId }: AddTran
                 <SelectItem value="FexPrime">FexPrime</SelectItem>
                 <SelectItem value="Cashfree">Cashfree</SelectItem>
                 <SelectItem value="CirclePe">CirclePe</SelectItem>
+                <SelectItem value="Fintree">Fintree</SelectItem>
               </SelectContent>
             </Select>
           </div>

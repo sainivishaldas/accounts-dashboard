@@ -9,5 +9,6 @@ COMMENT ON COLUMN residents.pm_contact IS 'Property manager contact number for t
 
 -- Add new values to the disbursement_type enum
 ALTER TYPE disbursement_type ADD VALUE IF NOT EXISTS 'FexPrime';
+ALTER TYPE disbursement_type ADD VALUE IF NOT EXISTS 'Fintree';
 ALTER TYPE disbursement_type ADD VALUE IF NOT EXISTS 'Cashfree';
 ALTER TYPE disbursement_type ADD VALUE IF NOT EXISTS 'CirclePe';

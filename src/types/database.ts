@@ -3,9 +3,10 @@ export type DisbursementStatus = 'fully_disbursed' | 'partial';
 export type RepaymentStatus = 'on_time' | 'overdue' | 'advance_paid';
 export type CurrentStatus = 'active' | 'move_out' | 'early_move_out' | 'extended';
 export type PropertyStatus = 'active' | 'inactive';
-export type DisbursementType =  'FexPrime' | 'Cashfree' | 'CirclePe';
+export type DisbursementType =  'FexPrime' | 'Cashfree' | 'CirclePe' | 'Fintree';
 export type PaymentMode = 'Manual' | 'NACH';
 export type UserRole = 'admin' | 'viewer';
+export type DocumentType = 'rent_agreement' | 'id_proof' | 'other';
 
 export interface Database {
   public: {
@@ -230,6 +231,38 @@ export interface Database {
           updated_at?: string;
         };
       };
+      documents: {
+        Row: {
+          id: string;
+          resident_id: string | null;
+          file_name: string;
+          file_url: string;
+          file_size: number;
+          document_type: DocumentType;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          resident_id?: string | null;
+          file_name: string;
+          file_url: string;
+          file_size: number;
+          document_type?: DocumentType;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          resident_id?: string | null;
+          file_name?: string;
+          file_url?: string;
+          file_size?: number;
+          document_type?: DocumentType;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       dashboard_stats: {
@@ -266,6 +299,10 @@ export type Repayment = Database['public']['Tables']['repayments']['Row'];
 export type RepaymentInsert = Database['public']['Tables']['repayments']['Insert'];
 export type RepaymentUpdate = Database['public']['Tables']['repayments']['Update'];
 
+export type Document = Database['public']['Tables']['documents']['Row'];
+export type DocumentInsert = Database['public']['Tables']['documents']['Insert'];
+export type DocumentUpdate = Database['public']['Tables']['documents']['Update'];
+
 export type DashboardStats = Database['public']['Views']['dashboard_stats']['Row'];
 
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
@@ -277,4 +314,5 @@ export interface ResidentWithRelations extends DbResident {
   property?: Property | null;
   disbursements: Disbursement[];
   repayments: Repayment[];
+  documents: Document[];
 }
