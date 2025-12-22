@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesApi, residentsApi, dashboardApi } from '@/services/api';
+import { propertiesApi, residentsApi, dashboardApi, disbursementsApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { canCreateResident, canEditResident, canDeleteResident, canCreateProperty, canEditProperty, canDeleteProperty } from '@/lib/permissions';
-import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate } from '@/types/database';
+import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate, DisbursementInsert } from '@/types/database';
 import { toast } from 'sonner';
 
 // =============================================
@@ -217,6 +217,32 @@ export function useDeleteProperty() {
     },
     onError: (error: Error) => {
       toast.error('Failed to delete property', { description: error.message });
+    },
+  });
+}
+
+// =============================================
+// DISBURSEMENTS HOOKS
+// =============================================
+
+export function useCreateDisbursement() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async (disbursement: DisbursementInsert) => {
+      if (!canCreateResident(userRole)) {
+        throw new Error('You do not have permission to create disbursements');
+      }
+      return disbursementsApi.create(disbursement);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Transaction added successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to add transaction', { description: error.message });
     },
   });
 }
