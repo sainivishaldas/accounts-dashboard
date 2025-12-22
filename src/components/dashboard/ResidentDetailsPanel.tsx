@@ -76,8 +76,16 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
               {resident.resident_id} • {resident.property?.name || 'N/A'}
             </p>
           </div>
-          <div className="flex h-36 w-36 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-4xl shrink-0">
-            {resident.name.split(' ').map(n => n[0]).join('')}
+          <div className="relative group">
+            <div className="flex h-18 w-18 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-2xl shrink-0">
+              {resident.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <button
+              className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => toast.info("Photo upload coming soon")}
+            >
+              <Upload className="h-5 w-5 text-white" />
+            </button>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">

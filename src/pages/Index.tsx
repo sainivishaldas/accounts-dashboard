@@ -89,7 +89,6 @@ const Index = () => {
             value={formatCurrency(stats?.total_disbursed || 0)}
             subtitle="Advance rent to Truliv"
             icon={Wallet}
-            trend={{ value: 12.5, isPositive: true }}
           />
           <StatCard
             title="Pending Disbursement"
@@ -97,7 +96,6 @@ const Index = () => {
             subtitle="Onboarding pending for disbursement"
             icon={TrendingUp}
             variant="success"
-            trend={{ value: 8.2, isPositive: true }}
           />
           <StatCard
             title="Active Residents"

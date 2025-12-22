@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
-  TrendingUp,
   Building2,
   LogOut,
   User,
@@ -16,7 +15,6 @@ import { useAuth } from "@/contexts/AuthContext";
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Properties", href: "/properties", icon: Building2 },
-  { name: "Reports", href: "/reports", icon: TrendingUp },
 ];
 
 export function DashboardSidebar() {
