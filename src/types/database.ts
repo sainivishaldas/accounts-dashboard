@@ -3,7 +3,7 @@ export type DisbursementStatus = 'fully_disbursed' | 'partial';
 export type RepaymentStatus = 'on_time' | 'overdue' | 'advance_paid';
 export type CurrentStatus = 'active' | 'move_out' | 'early_move_out' | 'extended';
 export type PropertyStatus = 'active' | 'inactive';
-export type DisbursementType = '1st Tranche' | '2nd Tranche' | 'Final';
+export type DisbursementType =  'FexPrime' | 'Cashfree' | 'CirclePe';
 export type PaymentMode = 'Manual' | 'NACH';
 export type UserRole = 'admin' | 'viewer';
 
@@ -85,6 +85,8 @@ export interface Database {
           room_number: string | null;
           relationship_manager: string | null;
           rm_contact: string | null;
+          property_manager: string | null;
+          pm_contact: string | null;
           lease_start_date: string | null;
           lease_end_date: string | null;
           lock_in_period: number;
@@ -107,6 +109,8 @@ export interface Database {
           room_number?: string | null;
           relationship_manager?: string | null;
           rm_contact?: string | null;
+          property_manager?: string | null;
+          pm_contact?: string | null;
           lease_start_date?: string | null;
           lease_end_date?: string | null;
           lock_in_period?: number;
@@ -129,6 +133,8 @@ export interface Database {
           room_number?: string | null;
           relationship_manager?: string | null;
           rm_contact?: string | null;
+          property_manager?: string | null;
+          pm_contact?: string | null;
           lease_start_date?: string | null;
           lease_end_date?: string | null;
           lock_in_period?: number;
