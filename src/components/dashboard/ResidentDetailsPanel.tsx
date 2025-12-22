@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User } from "lucide-react";
+import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { AddTransactionDialog } from "./AddTransactionDialog";
 import type { ResidentWithRelations } from "@/types/database";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { canCreateResident } from "@/lib/permissions";
 
 interface ResidentDetailsPanelProps {
   resident: ResidentWithRelations;
@@ -21,6 +24,8 @@ function formatCurrency(amount: number) {
 
 export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanelProps) {
   const [activeTab, setActiveTab] = useState("disbursements");
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const { userRole } = useAuth();
 
   const totalCollected = resident.repayments
     .filter((r) => r.status === "paid" || r.status === "advance")
@@ -92,7 +97,19 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
           <TabsContent value="disbursements" className="p-6 space-y-4 mt-0">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Disbursement Schedule</h3>
-              <StatusBadge status={resident.disbursement_status} />
+              <div className="flex items-center gap-2">
+                <StatusBadge status={resident.disbursement_status} />
+                {canCreateResident(userRole) && (
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAddTransaction(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Transaction
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="finance-table">
@@ -230,10 +247,10 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                 </div>
                 <div className="p-4 rounded-lg border border-border space-y-3">
                   <p className="text-sm font-medium text-muted-foreground">Property Manager</p>
-                  <p className="font-medium">{resident.property?.property_manager_name || 'N/A'}</p>
+                  <p className="font-medium">{resident.property_manager || 'N/A'}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-3.5 w-3.5" />
-                    {resident.property?.property_manager_number || 'N/A'}
+                    {resident.pm_contact || 'N/A'}
                   </div>
                 </div>
               </div>
@@ -275,6 +292,13 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Add Transaction Dialog */}
+      <AddTransactionDialog
+        open={showAddTransaction}
+        onOpenChange={setShowAddTransaction}
+        residentId={resident.id}
+      />
     </div>
   );
 }

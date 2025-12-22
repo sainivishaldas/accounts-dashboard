@@ -44,6 +44,8 @@ interface CaseFormData {
   room_number: string;
   relationship_manager: string;
   rm_contact: string;
+  property_manager: string;
+  pm_contact: string;
   lease_start_date: Date | null;
   lease_end_date: Date | null;
   lock_in_period: number;
@@ -95,6 +97,8 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
       setValue("room_number", resident.room_number || "");
       setValue("relationship_manager", resident.relationship_manager || "");
       setValue("rm_contact", resident.rm_contact || "");
+      setValue("property_manager", resident.property_manager || "");
+      setValue("pm_contact", resident.pm_contact || "");
       setValue("lock_in_period", resident.lock_in_period || 0);
       setValue("monthly_rent", resident.monthly_rent || 0);
       setValue("security_deposit", resident.security_deposit || 0);
@@ -127,6 +131,8 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
         room_number: data.room_number || null,
         relationship_manager: data.relationship_manager || null,
         rm_contact: data.rm_contact || null,
+        property_manager: data.property_manager || null,
+        pm_contact: data.pm_contact || null,
         lease_start_date: leaseStartDate ? format(leaseStartDate, "yyyy-MM-dd") : null,
         lease_end_date: leaseEndDate ? format(leaseEndDate, "yyyy-MM-dd") : null,
         lock_in_period: Number(data.lock_in_period) || 0,
@@ -273,6 +279,30 @@ export function NewCaseDialog({ open, onOpenChange, resident }: NewCaseDialogPro
                 <Input
                   id="rm_contact"
                   {...register("rm_contact")}
+                  placeholder="+91 XXXXXXXXXX"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Property Manager */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold">Property Manager</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="property_manager">Manager Name</Label>
+                <Input
+                  id="property_manager"
+                  {...register("property_manager")}
+                  placeholder="Manager name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pm_contact">Manager Contact</Label>
+                <Input
+                  id="pm_contact"
+                  {...register("pm_contact")}
                   placeholder="+91 XXXXXXXXXX"
                 />
               </div>
