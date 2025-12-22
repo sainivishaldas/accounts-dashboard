@@ -108,18 +108,6 @@ export function AddTransactionDialog({ open, onOpenChange, residentId }: AddTran
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="disbursement_id">Transaction ID *</Label>
-            <Input
-              id="disbursement_id"
-              {...register("disbursement_id", { required: "Transaction ID is required" })}
-              placeholder="e.g., TXN001"
-            />
-            {errors.disbursement_id && (
-              <p className="text-sm text-destructive">{errors.disbursement_id.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
             <Label>Transaction Date *</Label>
             <Popover>
               <PopoverTrigger asChild>
