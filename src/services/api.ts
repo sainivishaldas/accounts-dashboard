@@ -141,7 +141,8 @@ export const residentsApi = {
         *,
         property:properties(*),
         disbursements(*),
-        repayments(*)
+        repayments(*),
+        documents(*)
       `)
       .order('created_at', { ascending: false });
 
@@ -161,7 +162,8 @@ export const residentsApi = {
         *,
         property:properties(*),
         disbursements(*),
-        repayments(*)
+        repayments(*),
+        documents(*)
       `)
       .eq('id', id);
 
