@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesApi, residentsApi, dashboardApi, disbursementsApi, documentsApi } from '@/services/api';
+import { propertiesApi, residentsApi, dashboardApi, disbursementsApi, documentsApi, repaymentsApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { canCreateResident, canEditResident, canDeleteResident, canCreateProperty, canEditProperty, canDeleteProperty } from '@/lib/permissions';
-import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate, DisbursementInsert, DocumentInsert } from '@/types/database';
+import type { PropertyInsert, PropertyUpdate, ResidentInsert, ResidentUpdate, DisbursementInsert, DisbursementUpdate, RepaymentInsert, RepaymentUpdate, DocumentInsert } from '@/types/database';
 import { toast } from 'sonner';
 
 // =============================================
@@ -243,6 +243,120 @@ export function useCreateDisbursement() {
     },
     onError: (error: Error) => {
       toast.error('Failed to add transaction', { description: error.message });
+    },
+  });
+}
+
+export function useUpdateDisbursement() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<DisbursementInsert> }) => {
+      if (!canEditResident(userRole)) {
+        throw new Error('You do not have permission to edit disbursements');
+      }
+      return disbursementsApi.update(id, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Transaction updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update transaction', { description: error.message });
+    },
+  });
+}
+
+export function useDeleteDisbursement() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!canDeleteResident(userRole)) {
+        throw new Error('You do not have permission to delete disbursements');
+      }
+      return disbursementsApi.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Transaction deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete transaction', { description: error.message });
+    },
+  });
+}
+
+// =============================================
+// REPAYMENTS HOOKS
+// =============================================
+
+export function useCreateRepayment() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async (repayment: RepaymentInsert) => {
+      if (!canCreateResident(userRole)) {
+        throw new Error('You do not have permission to create repayments');
+      }
+      return repaymentsApi.create(repayment);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Repayment added successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to add repayment', { description: error.message });
+    },
+  });
+}
+
+export function useUpdateRepayment() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<RepaymentInsert> }) => {
+      if (!canEditResident(userRole)) {
+        throw new Error('You do not have permission to edit repayments');
+      }
+      return repaymentsApi.update(id, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Repayment updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update repayment', { description: error.message });
+    },
+  });
+}
+
+export function useDeleteRepayment() {
+  const queryClient = useQueryClient();
+  const { userRole } = useAuth();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!canDeleteResident(userRole)) {
+        throw new Error('You do not have permission to delete repayments');
+      }
+      return repaymentsApi.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Repayment deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete repayment', { description: error.message });
     },
   });
 }

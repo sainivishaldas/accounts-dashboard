@@ -279,6 +279,42 @@ export const disbursementsApi = {
     log.success('disbursementsApi.create', 'Created disbursement', data[0]);
     return data[0];
   },
+
+  async update(id: string, updates: Partial<DisbursementInsert>): Promise<Disbursement> {
+    log.info('disbursementsApi.update', `Updating disbursement ${id}`, updates);
+    const { data, error } = await supabase
+      .from('disbursements')
+      .update(updates)
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      log.error('disbursementsApi.update', `Failed to update disbursement ${id}`, error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error(`Disbursement not found: ${id}`);
+    }
+    
+    log.success('disbursementsApi.update', `Updated disbursement ${id}`, data[0]);
+    return data[0];
+  },
+
+  async delete(id: string): Promise<void> {
+    log.info('disbursementsApi.delete', `Deleting disbursement ${id}`);
+    const { error } = await supabase
+      .from('disbursements')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      log.error('disbursementsApi.delete', `Failed to delete disbursement ${id}`, error);
+      throw error;
+    }
+    
+    log.success('disbursementsApi.delete', `Deleted disbursement ${id}`);
+  },
 };
 
 // =============================================
@@ -320,6 +356,42 @@ export const repaymentsApi = {
     
     log.success('repaymentsApi.create', 'Created repayment', data[0]);
     return data[0];
+  },
+
+  async update(id: string, updates: Partial<RepaymentInsert>): Promise<Repayment> {
+    log.info('repaymentsApi.update', `Updating repayment ${id}`, updates);
+    const { data, error } = await supabase
+      .from('repayments')
+      .update(updates)
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      log.error('repaymentsApi.update', `Failed to update repayment ${id}`, error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error(`Repayment not found: ${id}`);
+    }
+    
+    log.success('repaymentsApi.update', `Updated repayment ${id}`, data[0]);
+    return data[0];
+  },
+
+  async delete(id: string): Promise<void> {
+    log.info('repaymentsApi.delete', `Deleting repayment ${id}`);
+    const { error } = await supabase
+      .from('repayments')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      log.error('repaymentsApi.delete', `Failed to delete repayment ${id}`, error);
+      throw error;
+    }
+    
+    log.success('repaymentsApi.delete', `Deleted repayment ${id}`);
   },
 
   async updateStatus(id: string, status: PaymentStatus, amountPaid?: number, actualPaymentDate?: string): Promise<Repayment> {

@@ -1,14 +1,16 @@
 import { useState, useRef } from "react";
-import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus, Upload } from "lucide-react";
+import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus, Upload, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AddTransactionDialog } from "./AddTransactionDialog";
-import type { ResidentWithRelations } from "@/types/database";
+import { EditDisbursementDialog } from "./EditDisbursementDialog";
+import { AddRepaymentDialog } from "./AddRepaymentDialog";
+import type { ResidentWithRelations, Disbursement, Repayment } from "@/types/database";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { canCreateResident } from "@/lib/permissions";
-import { useUploadDocument } from "@/hooks/useSupabase";
+import { useUploadDocument, useDeleteDisbursement, useUpdateDisbursement, useCreateRepayment, useUpdateRepayment, useDeleteRepayment } from "@/hooks/useSupabase";
 import { toast } from "sonner";
 
 interface ResidentDetailsPanelProps {
@@ -27,9 +29,20 @@ function formatCurrency(amount: number) {
 export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanelProps) {
   const [activeTab, setActiveTab] = useState("disbursements");
   const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [showEditDisbursement, setShowEditDisbursement] = useState(false);
+  const [editingDisbursement, setEditingDisbursement] = useState<Disbursement | null>(null);
+  const [showAddRepayment, setShowAddRepayment] = useState(false);
+  const [showEditRepayment, setShowEditRepayment] = useState(false);
+  const [editingRepayment, setEditingRepayment] = useState<Repayment | null>(null);
   const { userRole } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const uploadDocument = useUploadDocument();
+  const deleteDisbursement = useDeleteDisbursement();
+  const updateDisbursement = useUpdateDisbursement();
+  const createRepayment = useCreateRepayment();
+  const updateRepayment = useUpdateRepayment();
+  const deleteRepayment = useDeleteRepayment();
 
   // Calculate total disbursed from actual disbursements
   const totalDisbursed = resident.disbursements
@@ -77,14 +90,31 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
             </p>
           </div>
           <div className="relative group">
-            <div className="flex h-18 w-18 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-2xl shrink-0">
+            <div className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-3xl shrink-0">
               {resident.name.split(' ').map(n => n[0]).join('')}
             </div>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  toast.info("Photo upload feature coming soon", {
+                    description: `Selected: ${file.name}`
+                  });
+                }
+                if (photoInputRef.current) {
+                  photoInputRef.current.value = '';
+                }
+              }}
+              className="hidden"
+            />
             <button
               className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => toast.info("Photo upload coming soon")}
+              onClick={() => photoInputRef.current?.click()}
             >
-              <Upload className="h-5 w-5 text-white" />
+              <Upload className="h-6 w-6 text-white" />
             </button>
           </div>
         </div>
@@ -156,6 +186,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                     <th>Amount</th>
                     <th>UTR Number</th>
                     <th>Type</th>
+                    {canCreateResident(userRole) && <th className="w-20">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -169,6 +200,35 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                           {d.type}
                         </span>
                       </td>
+                      {canCreateResident(userRole) && (
+                        <td>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => {
+                                setEditingDisbursement(d);
+                                setShowEditDisbursement(true);
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 hover:bg-destructive/10"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this transaction?')) {
+                                  deleteDisbursement.mutate(d.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -176,7 +236,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                   <tr className="bg-muted/50 font-medium">
                     <td>Total</td>
                     <td className="amount">{formatCurrency(totalDisbursed)}</td>
-                    <td colSpan={2}></td>
+                    <td colSpan={canCreateResident(userRole) ? 3 : 2}></td>
                   </tr>
                 </tfoot>
               </table>
@@ -187,9 +247,16 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
           <TabsContent value="repayments" className="p-6 space-y-4 mt-0">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Monthly Repayment Schedule</h3>
-              <p className="text-sm text-muted-foreground">
-                Monthly Rent: <span className="font-medium amount">{formatCurrency(Number(resident.monthly_rent))}</span>
-              </p>
+              {canCreateResident(userRole) && (
+                <Button
+                  size="sm"
+                  onClick={() => setShowAddRepayment(true)}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Repayment
+                </Button>
+              )}
             </div>
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="finance-table">
@@ -200,6 +267,7 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                     <th>Amount</th>
                     <th>Status</th>
                     <th>Paid On</th>
+                    {canCreateResident(userRole) && <th className="w-20">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -214,6 +282,35 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                       <td className="text-muted-foreground">
                         {r.actual_payment_date ? format(new Date(r.actual_payment_date), "MMM d, yyyy") : "—"}
                       </td>
+                      {canCreateResident(userRole) && (
+                        <td>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => {
+                                setEditingRepayment(r);
+                                setShowEditRepayment(true);
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 hover:bg-destructive/10"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this repayment?')) {
+                                  deleteRepayment.mutate(r.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -377,6 +474,40 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
         onOpenChange={setShowAddTransaction}
         residentId={resident.id}
       />
+
+      {/* Edit Disbursement Dialog */}
+      {editingDisbursement && (
+        <EditDisbursementDialog
+          open={showEditDisbursement}
+          onOpenChange={(open) => {
+            setShowEditDisbursement(open);
+            if (!open) setEditingDisbursement(null);
+          }}
+          disbursement={editingDisbursement}
+        />
+      )}
+
+      {/* Add Repayment Dialog */}
+      <AddRepaymentDialog
+        open={showAddRepayment}
+        onOpenChange={setShowAddRepayment}
+        residentId={resident.id}
+        mode="add"
+      />
+
+      {/* Edit Repayment Dialog */}
+      {editingRepayment && (
+        <AddRepaymentDialog
+          open={showEditRepayment}
+          onOpenChange={(open) => {
+            setShowEditRepayment(open);
+            if (!open) setEditingRepayment(null);
+          }}
+          residentId={resident.id}
+          repayment={editingRepayment}
+          mode="edit"
+        />
+      )}
     </div>
   );
 }
