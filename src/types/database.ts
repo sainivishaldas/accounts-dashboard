@@ -7,6 +7,7 @@ export type DisbursementType =  'FexPrime' | 'Cashfree' | 'CirclePe' | 'Fintree'
 export type PaymentMode = 'Manual' | 'NACH';
 export type UserRole = 'admin' | 'viewer';
 export type DocumentType = 'rent_agreement' | 'id_proof' | 'other';
+export type TicketStatus = 'pending' | 'resolved' | 'lapsed';
 
 export interface Database {
   public: {
@@ -309,10 +310,44 @@ export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
 export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update'];
 
+// Notes type (stored in memory for now, can be moved to DB later)
+export interface Note {
+  id: string;
+  resident_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Tickets type (stored in memory for now, can be moved to DB later)
+export interface Ticket {
+  id: string;
+  resident_id: string;
+  title: string;
+  description: string;
+  status: TicketStatus;
+  due_date: string;
+  resolved_date?: string;
+  comments: TicketComment[];
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TicketComment {
+  id: string;
+  ticket_id: string;
+  content: string;
+  created_by: string;
+  created_at: string;
+}
+
 // Extended resident type with relations
 export interface ResidentWithRelations extends DbResident {
   property?: Property | null;
   disbursements: Disbursement[];
   repayments: Repayment[];
   documents: Document[];
+  notes?: Note[];
+  tickets?: Ticket[];
 }
