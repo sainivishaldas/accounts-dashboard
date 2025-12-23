@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
-import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus, Upload, Pencil, Trash2 } from "lucide-react";
+import { X, FileText, MapPin, Phone, Mail, Calendar, Download, Building2, User, Plus, Upload, Pencil, Trash2, StickyNote, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AddTransactionDialog } from "./AddTransactionDialog";
 import { EditDisbursementDialog } from "./EditDisbursementDialog";
 import { AddRepaymentDialog } from "./AddRepaymentDialog";
-import type { ResidentWithRelations, Disbursement, Repayment } from "@/types/database";
+import { NotesTab } from "./NotesTab";
+import { TicketsTab } from "./TicketsTab";
+import type { ResidentWithRelations, Disbursement, Repayment, Note, Ticket as TicketType } from "@/types/database";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { canCreateResident } from "@/lib/permissions";
@@ -34,6 +36,8 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
   const [showAddRepayment, setShowAddRepayment] = useState(false);
   const [showEditRepayment, setShowEditRepayment] = useState(false);
   const [editingRepayment, setEditingRepayment] = useState<Repayment | null>(null);
+  const [notes, setNotes] = useState<Note[]>(resident.notes || []);
+  const [tickets, setTickets] = useState<TicketType[]>(resident.tickets || []);
   const { userRole } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -157,6 +161,12 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
             </TabsTrigger>
             <TabsTrigger value="documents" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
               Documents
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value="tickets" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              Tickets
             </TabsTrigger>
           </TabsList>
 
@@ -464,6 +474,24 @@ export function ResidentDetailsPanel({ resident, onClose }: ResidentDetailsPanel
                 <p className="text-xs text-muted-foreground mt-1">Click "Upload Document" to add files</p>
               </div>
             )}
+          </TabsContent>
+
+          {/* Notes Tab */}
+          <TabsContent value="notes" className="mt-0">
+            <NotesTab
+              residentId={resident.id}
+              notes={notes}
+              onNotesChange={setNotes}
+            />
+          </TabsContent>
+
+          {/* Tickets Tab */}
+          <TabsContent value="tickets" className="mt-0">
+            <TicketsTab
+              residentId={resident.id}
+              tickets={tickets}
+              onTicketsChange={setTickets}
+            />
           </TabsContent>
         </Tabs>
       </div>

@@ -34,6 +34,11 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+function calculateDisbursementPending(resident: ResidentWithRelations): number {
+  const totalDisbursed = resident.disbursements.reduce((sum, d) => sum + Number(d.amount), 0);
+  return Number(resident.monthly_rent) - totalDisbursed;
+}
+
 type SortField = "name" | "monthly_rent" | "lease_start_date" | "lease_end_date" | "repayment_status";
 type SortDirection = "asc" | "desc";
 
@@ -131,6 +136,7 @@ export function ResidentsTable({ residents, onEditResident }: ResidentsTableProp
                   <SortHeader field="monthly_rent">Package Amount</SortHeader>
                 </th>
                 <th>Disbursement</th>
+                <th>Disbursement Pending</th>
                 <th>Current Status</th>
                 <th className="w-12"></th>
               </tr>
@@ -167,6 +173,19 @@ export function ResidentsTable({ residents, onEditResident }: ResidentsTableProp
                   <td className="amount font-medium">{formatCurrency(Number(resident.monthly_rent))}</td>
                   <td>
                     <StatusBadge status={resident.disbursement_status} />
+                  </td>
+                  <td>
+                    {(() => {
+                      const pending = calculateDisbursementPending(resident);
+                      if (pending > 0) {
+                        return (
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">
+                            {formatCurrency(pending)}
+                          </span>
+                        );
+                      }
+                      return <span className="text-muted-foreground">—</span>;
+                    })()}
                   </td>
                   <td>
                     <StatusBadge status={resident.current_status} />
